@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محطم العادات السيئة | Habit Crusher</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="light-mode">
+    <div class="theme-toggle">
+        <button id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="#welcome" class="nav-link active">
+                <i class="fas fa-home"></i>
+                الرئيسية
+            </a>
+            <a href="#habitSelection" class="nav-link">
+                <i class="fas fa-list-alt"></i>
+                العادات السيئة
+            </a>
+            <a href="#about" class="nav-link">
+                <i class="fas fa-info-circle"></i>
+                حول التطبيق
+            </a>
+            <a href="#privacy" class="nav-link">
+                <i class="fas fa-shield-alt"></i>
+                سياسة الخصوصية
+            </a>
+        </div>
+    </nav>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <!-- Welcome Section -->
+    <section id="welcome" class="section active">
+        <div class="container">
+            <h1>محطم العادات السيئة</h1>
+            <h2>Habit Crusher</h2>
+            <p>ابدأ رحلة التغيير اليوم. حول عاداتك السيئة إلى نجاحات يومية.</p>
+            <button id="startButton" class="btn-primary">ابدأ التغيير</button>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>إحصائيات</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>نصائح يومية</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-share-alt"></i>
+                    <span>مشاركة التقدم</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Habit Selection Section -->
+    <section id="habitSelection" class="section">
+        <div class="container">
+            <button class="back-btn" data-target="welcome">
+                <i class="fas fa-arrow-right"></i>
+                رجوع
+            </button>
+            <h2>اختر العادة التي تريد التخلص منها</h2>
+            
+            <!-- Search Box -->
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="habitSearch" placeholder="ابحث عن عادة...">
+                </div>
+            </div>
+
+            <div class="habits-grid extended">
+                <!-- Main Habits -->
+                <div class="habit-card" data-habit="smoking">
+                    <i class="fas fa-smoking"></i>
+                    <h3>التدخين</h3>
+                    <p>التخلص من عادة التدخين وتحسين الصحة</p>
+                </div>
+                
+                <div class="habit-card" data-habit="procrastination">
+                    <i class="fas fa-clock"></i>
+                    <h3>التسويف</h3>
+                    <p>التغلب على تأجيل المهام وزيادة الإنتاجية</p>
+                </div>
+                
+                <div class="habit-card" data-habit="late-sleep">
+                    <i class="fas fa-moon"></i>
+                    <h3>السهر</h3>
+                    <p>تنظيم مواعيد النوم وتحسين جودة الحياة</p>
+                </div>
+                
+                <div class="habit-card" data-habit="phone-addiction">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>إدمان الهاتف</h3>
+                    <p>تقليل استخدام الهاتف وتحسين التركيز</p>
+                </div>
+                
+                <div class="habit-card" data-habit="unhealthy-food">
+                    <i class="fas fa-hamburger"></i>
+                    <h3>الأكل غير الصحي</h3>
+                    <p>تحسين العادات الغذائية والصحة العامة</p>
+                </div>
+                
+                <div class="habit-card" data-habit="negative-thinking">
+                    <i class="fas fa-brain"></i>
+                    <h3>التفكير السلبي</h3>
+                    <p>تطوير نظرة إيجابية للحياة والذات</p>
+                </div>
+
+                <!-- Additional Habits -->
+                <div class="habit-card" data-habit="social-media">
+                    <i class="fas fa-hashtag"></i>
+                    <h3>إدمان مواقع التواصل</h3>
+                    <p>تنظيم استخدام وسائل التواصل الاجتماعي</p>
+                </div>
+                
+                <div class="habit-card" data-habit="nail-biting">
+                    <i class="fas fa-hand-paper"></i>
+                    <h3>قضم الأظافر</h3>
+                    <p>التخلص من عادة قضم الأظافر العصبية</p>
+                </div>
+                
+                <div class="habit-card" data-habit="impulse-buying">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3>الشراء الاندفاعي</h3>
+                    <p>تحسين القرارات المالية والتحكم في النفقات</p>
+                </div>
+                
+                <div class="habit-card" data-habit="interrupting">
+                    <i class="fas fa-comment-slash"></i>
+                    <h3>مقاطعة الآخرين</h3>
+                    <p>تطوير مهارات الاستماع والتواصل</p>
+                </div>
+                
+                <div class="habit-card" data-habit="perfectionism">
+                    <i class="fas fa-check-double"></i>
+                    <h3>الكمالية المفرطة</h3>
+                    <p>تحقيق التوازن بين الإتقان والإنجاز</p>
+                </div>
+                
+                <div class="habit-card" data-habit="self-criticism">
+                    <i class="fas fa-comment-dots"></i>
+                    <h3>النقد الذاتي المفرط</h3>
+                    <p>تطوير علاقة صحية مع الذات</p>
+                </div>
+                
+                <div class="habit-card" data-habit="stress-eating">
+                    <i class="fas fa-cookie-bite"></i>
+                    <h3>الأكل العاطفي</h3>
+                    <p>تحسين العلاقة بين الطعام والمشاعر</p>
+                </div>
+                
+                <div class="habit-card" data-habit="overthinking">
+                    <i class="fas fa-brain"></i>
+                    <h3>التفكير الزائد</h3>
+                    <p>تبسيط التفكير واتخاذ القرارات</p>
+                </div>
+
+                <div class="habit-card" data-habit="porn-addiction">
+                    <i class="fas fa-eye-slash"></i>
+                    <h3>إدمان المحتوى الإباحي</h3>
+                    <p>التعافي وبناء علاقات صحية</p>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResults" class="no-results" style="display: none;">
+                <i class="fas fa-search"></i>
+                <p>لم يتم العثور على نتائج</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Habit Info Section -->
+    <section id="habitInfo" class="section">
+        <div class="container">
+            <button class="back-btn" data-target="habitSelection">
+                <i class="fas fa-arrow-right"></i>
+                رجوع
+            </button>
+            <div class="info-card">
+                <h2 id="habitTitle"></h2>
+                <div class="info-item definition">
+                    <h3>التعريف</h3>
+                    <p id="habitDefinition"></p>
+                </div>
+                <div class="info-content">
+                    <div class="info-item">
+                        <h3>الضرر</h3>
+                        <p id="habitHarm"></p>
+                    </div>
+                    <div class="info-item">
+                        <h3>التأثير</h3>
+                        <p id="habitEffect"></p>
+                    </div>
+                    <div class="info-item">
+                        <h3>حقيقة إحصائية</h3>
+                        <p id="habitStat"></p>
+                    </div>
+                    <div class="motivation">
+                        <p id="habitMotivation"></p>
+                    </div>
+                </div>
+                <button id="startTracking" class="btn-primary">ابدأ التتبع</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Progress Tracking Section -->
+    <section id="progressTracking" class="section">
+        <div class="container">
+            <button class="back-btn" data-target="habitInfo">
+                <i class="fas fa-arrow-right"></i>
+                رجوع
+            </button>
+            <h2>تتبع تقدمك</h2>
+            <div class="progress-card">
+                <div class="streak-counter">
+                    <h3>أيام النجاح المتتالية</h3>
+                    <div class="streak-number" id="streakCount">0</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="motivation-message" id="motivationMessage"></div>
+                <button id="successButton" class="btn-success">نجحت اليوم! ✨</button>
+                
+                <div class="features-section">
+                    <div class="daily-tip-section">
+                        <h3>نصيحة اليوم</h3>
+                        <div id="dailyTip" class="daily-tip-card"></div>
+                    </div>
+
+                    <div class="share-section">
+                        <h3>شارك نجاحك</h3>
+                        <div class="share-buttons">
+                            <button id="shareProgress" class="btn-share">
+                                <i class="fas fa-share-alt"></i>
+                                مشاركة التقدم
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+        <div class="container">
+            <h2>حول التطبيق</h2>
+            <div class="about-content">
+                <div class="about-card">
+                    <h3>ما هو محطم العادات السيئة؟</h3>
+                    <p>محطم العادات السيئة هو تطبيق مجاني يساعدك على التخلص من العادات السيئة وبناء عادات صحية جديدة. نحن نؤمن بأن التغيير يبدأ بخطوة صغيرة كل يوم.</p>
+                    
+                    <h3>كيف يعمل التطبيق؟</h3>
+                    <ul>
+                        <li>اختر العادة التي تريد التخلص منها</li>
+                        <li>تتبع تقدمك يومياً</li>
+                        <li>احصل على نصائح يومية مخصصة</li>
+                        <li>شارك نجاحاتك مع الآخرين</li>
+                    </ul>
+
+                    <h3>لماذا نحن مختلفون؟</h3>
+                    <p>نركز على البساطة والفعالية، لا تعقيدات، فقط ما تحتاجه للنجاح في رحلة التغيير.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy Section -->
+    <section id="privacy" class="section">
+        <div class="container">
+            <h2>سياسة الخصوصية</h2>
+            <div class="privacy-content">
+                <div class="privacy-card">
+                    <h3>البيانات التي نجمعها</h3>
+                    <p>نحن نحترم خصوصيتك. جميع بياناتك تُخزن محلياً على جهازك فقط ولا يتم مشاركتها مع أي طرف ثالث.</p>
+
+                    <h3>كيف نستخدم بياناتك</h3>
+                    <ul>
+                        <li>تخزين تقدمك في العادات</li>
+                        <li>حفظ تفضيلات المظهر (الوضع الداكن/الفاتح)</li>
+                        <li>لا نجمع أي معلومات شخصية</li>
+                        <li>لا نستخدم ملفات تعريف الارتباط</li>
+                    </ul>
+
+                    <h3>مشاركة التقدم</h3>
+                    <p>عند مشاركة تقدمك، أنت تتحكم في المحتوى الذي تريد مشاركته. لا نشارك أي معلومات إضافية.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html> 
