@@ -74,6 +74,11 @@ body {
     border-radius: 50%;
     position: relative;
     transition: var(--transition);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .notifications-toggle:hover {
@@ -82,37 +87,49 @@ body {
 
 .notifications-count {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: -5px;
+    right: -5px;
     background-color: var(--primary-color);
     color: white;
     font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 10px;
-    display: none;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
 }
 
 .notifications-count.show {
-    display: block;
+    opacity: 1;
+    transform: scale(1);
 }
 
 .notifications-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 300px;
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    width: 320px;
     background-color: var(--bg-color);
-    border-radius: 10px;
+    border-radius: 15px;
     box-shadow: var(--shadow);
-    margin-top: 10px;
-    display: none;
-    z-index: 1000;
-    max-height: 400px;
-    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+    transition: all 0.3s ease;
+    max-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
 }
 
 .notifications-list.show {
-    display: block;
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
 }
 
 .notifications-header {
@@ -121,11 +138,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: var(--card-bg);
+    border-radius: 15px 15px 0 0;
 }
 
 .notifications-header h3 {
     margin: 0;
     font-size: 1.1rem;
+    color: var(--text-color);
 }
 
 .clear-notifications {
@@ -133,32 +153,64 @@ body {
     border: none;
     color: var(--text-color);
     cursor: pointer;
-    padding: 5px;
+    padding: 5px 10px;
     border-radius: 5px;
+    font-size: 0.9rem;
     transition: var(--transition);
 }
 
 .clear-notifications:hover {
-    background-color: var(--card-bg);
+    background-color: var(--bg-color);
 }
 
 .notifications-content {
-    max-height: 350px;
     overflow-y: auto;
+    flex-grow: 1;
+    padding: 10px 0;
 }
 
 .notification-item {
-    padding: 15px;
+    padding: 12px 15px;
     border-bottom: 1px solid var(--card-bg);
     transition: var(--transition);
     cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
 }
 
 .notification-item:hover {
     background-color: var(--card-bg);
 }
 
-.notification-item .time {
+.notification-item.read {
+    opacity: 0.7;
+}
+
+.notification-icon {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    padding-top: 3px;
+}
+
+.notification-content {
+    flex-grow: 1;
+}
+
+.notification-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.notification-message {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+.notification-time {
     font-size: 0.8rem;
     color: var(--text-color);
     opacity: 0.7;
@@ -166,10 +218,53 @@ body {
 }
 
 .no-notifications {
-    padding: 20px;
+    padding: 30px 20px;
     text-align: center;
     color: var(--text-color);
     opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+/* Dark Mode Adjustments */
+.dark-mode .notifications-list {
+    background-color: var(--bg-color);
+    border: 1px solid var(--card-bg);
+}
+
+.dark-mode .notification-item:hover {
+    background-color: var(--card-bg);
+}
+
+/* Responsive Design for Notifications */
+@media (max-width: 768px) {
+    .notifications-list {
+        width: calc(100% - 40px);
+        max-height: calc(100vh - 100px);
+    }
+
+    .notification-item {
+        padding: 10px 12px;
+    }
+
+    .notifications-toggle {
+        width: 35px;
+        height: 35px;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .notifications-list {
+        width: calc(100% - 20px);
+        right: 10px;
+        left: 10px;
+    }
+
+    .notifications-toggle {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
 }
 
 /* Container and Section Styles */
