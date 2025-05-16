@@ -1,10 +1,61 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "7637a140-88f1-4548-add3-48db48a70021",
+    });
+  });
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>محطم العادات السيئة</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- OneSignal Web Push SDK -->
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async="async"></script>
+  <script>
+    // ضع App ID الخاص بك هنا
+    const ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID";
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(function(OneSignal) {
+      OneSignal.init({
+        appId: ONESIGNAL_APP_ID,
+        notifyButton: {
+          enable: true,
+          size: 'large',
+          position: 'bottom-left',
+          text: {
+            'tip.state.unsubscribed': 'تفعيل الإشعارات',
+            'tip.state.subscribed': 'الإشعارات مفعلة',
+            'tip.state.blocked': 'الإشعارات محظورة',
+            'message.prenotify': 'اضغط لتفعيل الإشعارات',
+            'message.action.subscribed': 'تم تفعيل الإشعارات!',
+            'message.action.resubscribed': 'الإشعارات مفعلة!',
+            'message.action.unsubscribed': 'تم إيقاف الإشعارات',
+            'dialog.main.title': 'إشعارات الموقع',
+            'dialog.main.button.subscribe': 'تفعيل',
+            'dialog.main.button.unsubscribe': 'إيقاف',
+          }
+        },
+        promptOptions: {
+          slidedown: {
+            prompts: [{
+              type: "push",
+              autoPrompt: true,
+              text: {
+                actionMessage: "هل ترغب في تفعيل إشعارات التحفيز والتذكير؟",
+                acceptButton: "نعم، أريد!",
+                cancelButton: "لاحقًا"
+              }
+            }]
+          }
+        }
+      });
+    });
+  </script>
 </head>
 <body>
   <header>
