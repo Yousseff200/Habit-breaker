@@ -114,6 +114,18 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast('أحسنت! يوم جديد من المقاومة 🎉', 'success');
       showMotivation();
       notify('يوم جديد من المقاومة!', 'استمر في تحطيم عاداتك السيئة!');
+      // إرسال إشعار تحفيزي عبر OneSignal إذا كان متاحًا
+      if (window.OneSignal) {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(function(OneSignal) {
+          OneSignal.sendSelfNotification(
+            '👏 يوم جديد من الالتزام!',
+            'استمر في تحطيم عاداتك السيئة. أنت بطل اليوم! 💪',
+            null,
+            null
+          );
+        });
+      }
     }
   });
 });
