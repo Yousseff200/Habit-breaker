@@ -114,18 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast('أحسنت! يوم جديد من المقاومة 🎉', 'success');
       showMotivation();
       notify('يوم جديد من المقاومة!', 'استمر في تحطيم عاداتك السيئة!');
-      // إرسال إشعار تحفيزي عبر OneSignal إذا كان متاحًا
-      if (window.OneSignal && OneSignal.sendSelfNotification) {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(function(OneSignal) {
-          OneSignal.sendSelfNotification(
-            '👏 يوم جديد من الالتزام!',
-            'استمر في تحطيم عاداتك السيئة. أنت بطل اليوم! 💪',
-            null,
-            null
-          ).catch(function(e){});
-        });
-      }
     }
   });
 });
@@ -141,6 +129,16 @@ function showToast(msg, type = 'info') {
 function notify(title, body) {
   if (window.Notification && Notification.permission === 'granted') {
     new Notification(title, { body });
+  } else if (window.Notification && Notification.permission !== 'denied') {
+    Notification.requestPermission().then(function(permission) {
+      if (permission === 'granted') {
+        new Notification(title, { body });
+      } else {
+        showToast(body, 'success');
+      }
+    });
+  } else {
+    showToast(body, 'success');
   }
 }
 if (window.Notification && Notification.permission !== 'granted') {
