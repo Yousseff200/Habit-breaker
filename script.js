@@ -784,54 +784,13 @@ document.head.appendChild(style);
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     // Register Service Worker for Push Notifications
-    registerServiceWorker().then(() => {
-        console.log('Service Worker تم تسجيله بنجاح');
-    }).catch(error => {
-        console.error('فشل تسجيل Service Worker:', error);
-    });
+    registerServiceWorker();
     
     // Initialize theme
     loadTheme();
 
     // Initialize search functionality
     initializeSearch();
-
-    // Add test notification button
-    const testNotificationBtn = document.createElement('button');
-    testNotificationBtn.textContent = 'اختبار الإشعارات';
-    testNotificationBtn.className = 'btn btn-primary';
-    testNotificationBtn.style.margin = '10px';
-    testNotificationBtn.onclick = async () => {
-        try {
-            // Check if service worker is registered
-            const registration = await navigator.serviceWorker.ready;
-            
-            // Send test notification
-            await registration.showNotification('اختبار الإشعارات', {
-                body: 'هذا اختبار للإشعارات. إذا رأيت هذه الرسالة، فإن الإشعارات تعمل بنجاح! 🎉',
-                icon: '/icon.png',
-                badge: '/badge.png',
-                dir: 'rtl',
-                lang: 'ar',
-                requireInteraction: true,
-                actions: [
-                    {
-                        action: 'open',
-                        title: 'فتح التطبيق'
-                    },
-                    {
-                        action: 'close',
-                        title: 'إغلاق'
-                    }
-                ]
-            });
-            console.log('تم إرسال إشعار الاختبار بنجاح');
-        } catch (error) {
-            console.error('فشل إرسال إشعار الاختبار:', error);
-            alert('حدث خطأ أثناء إرسال الإشعار. تأكد من السماح بالإشعارات في إعدادات المتصفح.');
-        }
-    };
-    document.querySelector('#habitSelection').prepend(testNotificationBtn);
 
     // Initialize other features
     if (currentHabit) {
@@ -842,7 +801,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Load the specific habit's progress
         loadProgress();
         showDailyTip();
-        checkLastSuccessTime();
+        checkLastSuccessTime(); // Add initial check
     }
 
     // Initialize notifications
@@ -1037,126 +996,63 @@ function markAllAsRead() {
     updateNotificationsUI();
 }
 
-// Update Service Worker registration
+// Service Worker Registration
 async function registerServiceWorker() {
-    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-        console.log('المتصفح لا يدعم Service Worker أو الإشعارات');
-        return;
-    }
-
-    try {
-        // Check if we already have permission
-        if (Notification.permission === 'default') {
+    if ('serviceWorker' in navigator && 'Notification' in window) {
+        try {
+            // Request notification permission immediately
             const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                console.log('لم يتم منح إذن الإشعارات');
-                return;
-            }
-        }
-
-        // Register service worker
-        const registration = await navigator.serviceWorker.register('/service-worker.js');
-        console.log('Service Worker تم تسجيله:', registration);
-
-        // Wait for the service worker to be ready
-        await navigator.serviceWorker.ready;
-        console.log('Service Worker جاهز');
-
-        // Initialize notifications
-        await initializePushNotifications(registration);
-
-        return registration;
-    } catch (error) {
-        console.error('فشل تسجيل Service Worker:', error);
-        throw error;
-    }
-}
-
-// Update Initialize Push Notifications
-async function initializePushNotifications(registration) {
-    try {
-        // Check if notification permission is already granted
-        if (Notification.permission === 'granted') {
-            console.log('تم منح إذن الإشعارات مسبقاً');
-        } else {
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                console.log('لم يتم منح إذن الإشعارات');
-                return;
-            }
-        }
-
-        // Store the permission status
-        localStorage.setItem('notificationsEnabled', 'true');
-        
-        // Register for periodic background sync if supported
-        if ('periodicSync' in registration) {
-            try {
-                const status = await navigator.permissions.query({
-                    name: 'periodic-background-sync',
-                });
-
-                if (status.state === 'granted') {
-                    await registration.periodicSync.register('check-habit-progress', {
-                        minInterval: 60 * 60 * 1000, // 1 hour
-                    });
-                    console.log('تم تسجيل التزامن الدوري بنجاح');
-                }
-            } catch (error) {
-                console.log('التزامن الدوري في الخلفية غير مدعوم:', error);
-            }
-        }
-
-        // Schedule immediate test notification
-        setTimeout(async () => {
-            try {
-                await registration.showNotification('تم تفعيل الإشعارات', {
-                    body: 'تم تفعيل نظام الإشعارات بنجاح! ستتلقى تذكيرات يومية لتسجيل تقدمك.',
+            if (permission === 'granted') {
+                console.log('تم منح إذن الإشعارات');
+                
+                // Register service worker
+                const registration = await navigator.serviceWorker.register('service-worker.js');
+                console.log('تم تسجيل Service Worker');
+                
+                // Send welcome notification
+                await registration.showNotification('مرحباً بك في محطم العادات! 👋', {
+                    body: 'سنساعدك في التغلب على عاداتك السيئة. نحن هنا لدعمك!',
                     icon: '/icon.png',
                     badge: '/badge.png',
                     dir: 'rtl',
                     lang: 'ar',
-                    requireInteraction: true
+                    requireInteraction: true,
+                    silent: false,
+                    actions: [
+                        {
+                            action: 'open',
+                            title: 'فتح التطبيق'
+                        }
+                    ]
                 });
-                console.log('تم إرسال إشعار التفعيل بنجاح');
-            } catch (error) {
-                console.error('فشل إرسال إشعار التفعيل:', error);
+
+                // Initialize notifications system
+                await initializeNotificationSystem(registration);
             }
-        }, 2000);
-
-        // Schedule daily notifications
-        await scheduleNotifications(registration);
-        console.log('تم جدولة الإشعارات اليومية');
-
-    } catch (error) {
-        console.error('حدث خطأ أثناء تهيئة الإشعارات:', error);
-        throw error;
+        } catch (error) {
+            console.error('فشل في تسجيل Service Worker:', error);
+        }
     }
 }
 
-// Schedule notifications for morning and evening
-async function scheduleNotifications(registration) {
-    // Schedule morning notification (9 AM)
-    scheduleDailyNotification(registration, 9, 0, {
-        title: 'محطم العادات السيئة',
-        body: 'صباح الخير! لا تنس تسجيل تقدمك اليوم 🌟',
-        tag: 'morning-reminder'
-    });
-
-    // Schedule evening notification (8 PM)
-    scheduleDailyNotification(registration, 20, 0, {
-        title: 'محطم العادات السيئة',
-        body: 'مساء الخير! هل سجلت تقدمك اليوم؟ 🌙',
-        tag: 'evening-reminder'
-    });
+// Initialize notification system
+async function initializeNotificationSystem(registration) {
+    // Store notification permission in localStorage
+    localStorage.setItem('notificationsEnabled', 'true');
+    
+    // Schedule daily notifications
+    scheduleLocalNotification('morning', 9); // Morning notification at 9 AM
+    scheduleLocalNotification('evening', 20); // Evening notification at 8 PM
+    
+    // Setup notification for habit tracking
+    setupHabitTrackingNotifications(registration);
 }
 
-// Schedule a daily notification at specific hour and minute
-function scheduleDailyNotification(registration, hour, minute, options) {
+// Schedule local notification that works offline
+function scheduleLocalNotification(type, hour) {
     const now = new Date();
-    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
+    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, 0);
     
-    // If the time has passed today, schedule for tomorrow
     if (now > scheduledTime) {
         scheduledTime.setDate(scheduledTime.getDate() + 1);
     }
@@ -1164,15 +1060,21 @@ function scheduleDailyNotification(registration, hour, minute, options) {
     const timeUntilNotification = scheduledTime - now;
     
     setTimeout(async () => {
-        try {
-            await registration.showNotification(options.title, {
-                body: options.body,
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            
+            const title = 'محطم العادات السيئة';
+            const options = {
+                body: type === 'morning' 
+                    ? 'صباح الخير! لا تنس تسجيل تقدمك اليوم 🌟' 
+                    : 'مساء الخير! هل سجلت تقدمك اليوم؟ 🌙',
                 icon: '/icon.png',
                 badge: '/badge.png',
-                tag: options.tag,
                 dir: 'rtl',
                 lang: 'ar',
                 requireInteraction: true,
+                silent: false,
+                tag: `daily-${type}`,
                 actions: [
                     {
                         action: 'open',
@@ -1183,29 +1085,79 @@ function scheduleDailyNotification(registration, hour, minute, options) {
                         title: 'إغلاق'
                     }
                 ]
-            });
-            // Schedule next notification for tomorrow
-            scheduleDailyNotification(registration, hour, minute, options);
-        } catch (error) {
-            console.error('فشل إرسال الإشعار:', error);
+            };
+            
+            try {
+                await registration.showNotification(title, options);
+                // Schedule next notification
+                scheduleLocalNotification(type, hour);
+            } catch (error) {
+                console.error('فشل في إرسال الإشعار:', error);
+            }
         }
     }, timeUntilNotification);
 }
 
-// Helper function to convert VAPID key
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/');
+// Setup notifications for habit tracking
+function setupHabitTrackingNotifications(registration) {
+    // Send notification when user completes a day
+    successButton.addEventListener('click', async () => {
+        if (streak > 0 && streak % 1 === 0) { // Send notification for each day
+            try {
+                await registration.showNotification('أحسنت! 🎉', {
+                    body: `لقد أكملت ${streak} يوم من النجاح! استمر في التقدم!`,
+                    icon: '/icon.png',
+                    badge: '/badge.png',
+                    dir: 'rtl',
+                    lang: 'ar',
+                    requireInteraction: true,
+                    silent: false,
+                    actions: [
+                        {
+                            action: 'share',
+                            title: 'مشاركة'
+                        }
+                    ]
+                });
+            } catch (error) {
+                console.error('فشل في إرسال إشعار النجاح:', error);
+            }
+        }
+    });
+}
 
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
+// Update checkLastSuccessTime to send notifications
+function checkLastSuccessTime() {
+    if (!lastSuccessDate) return;
+    
+    const now = new Date();
+    const lastDate = new Date(lastSuccessDate);
+    const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays >= 1) {
+        const habit = habitsData[currentHabit];
+        
+        // Send reminder notification
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification('تذكير يومي 📝', {
+                    body: `لم تسجل تقدمك في ${habit.title} منذ ${diffDays} يوم. عد للمسار الصحيح!`,
+                    icon: '/icon.png',
+                    badge: '/badge.png',
+                    dir: 'rtl',
+                    lang: 'ar',
+                    requireInteraction: true,
+                    silent: false,
+                    actions: [
+                        {
+                            action: 'open',
+                            title: 'تسجيل التقدم'
+                        }
+                    ]
+                });
+            });
+        }
     }
-    return outputArray;
 }
 
 // Schedule Push Notification
