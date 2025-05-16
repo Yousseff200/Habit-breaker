@@ -411,6 +411,9 @@ function updateNotificationsUI() {
     
     if (!notificationsCount || !notificationsContent) return;
 
+    // Get notifications from localStorage to ensure we have the latest state
+    notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+
     // Sort notifications by priority and date
     const sortedNotifications = [...notifications].sort((a, b) => {
         if (a.priority !== b.priority) {
@@ -452,6 +455,9 @@ function updateNotificationsUI() {
 
     // Add click listeners to notification items
     addNotificationListeners();
+
+    // Save the updated notifications state to localStorage
+    localStorage.setItem('notifications', JSON.stringify(notifications));
 }
 
 // Group notifications by date
@@ -764,6 +770,10 @@ startTrackingButton.addEventListener('click', () => {
             notifications = [];
             localStorage.setItem('notifications', JSON.stringify(notifications));
             updateNotificationsUI();
+            // Close notifications panel
+            if (notificationsList) {
+                notificationsList.classList.remove('show');
+            }
         });
     }
 
@@ -1266,21 +1276,22 @@ function initializeNotifications() {
 
 // Mark notification as read
 function markNotificationAsRead(id) {
-    notifications = notifications.map(n => {
-        if (n.id === id) {
-            return { ...n, read: true };
-        }
-        return n;
-    });
-    
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-    updateNotificationsUI();
+    const notificationIndex = notifications.findIndex(n => n.id === id);
+    if (notificationIndex !== -1) {
+        notifications[notificationIndex].read = true;
+        // Save immediately to localStorage
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        // Update UI
+        updateNotificationsUI();
+    }
 }
 
 // Mark all notifications as read
 function markAllAsRead() {
     notifications = notifications.map(n => ({ ...n, read: true }));
+    // Save immediately to localStorage
     localStorage.setItem('notifications', JSON.stringify(notifications));
+    // Update UI
     updateNotificationsUI();
 }
 
