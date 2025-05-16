@@ -1,1354 +1,1282 @@
-/* Font Import */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-
-/* Reset and Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --primary-color: #2196f3;
-    --success-color: #4caf50;
-    --text-color: #333;
-    --bg-color: #fff;
-    --card-bg: #f5f5f5;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
-}
-
-.dark-mode {
-    --text-color: #fff;
-    --bg-color: #1a1a1a;
-    --card-bg: #2d2d2d;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-body {
-    font-family: 'Cairo', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    line-height: 1.6;
-    transition: var(--transition);
-}
-
-/* Theme Toggle */
-.theme-toggle {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 1000;
-}
-
-.theme-toggle button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-color);
-    cursor: pointer;
-    padding: 10px;
-    border-radius: 50%;
-    transition: var(--transition);
-}
-
-.theme-toggle button:hover {
-    background-color: var(--card-bg);
-}
-
-/* Notifications Menu */
-.notifications-menu {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.notifications-toggle {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    position: relative;
-    transition: var(--transition);
-}
-
-.notifications-toggle:hover {
-    background-color: var(--card-bg);
-}
-
-.notifications-count {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background-color: var(--primary-color);
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 10px;
-    display: none;
-}
-
-.notifications-count.show {
-    display: block;
-}
-
-.notifications-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 300px;
-    background-color: var(--bg-color);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    margin-top: 10px;
-    display: none;
-    z-index: 1000;
-    max-height: 400px;
-    overflow: hidden;
-}
-
-.notifications-list.show {
-    display: block;
-}
-
-.notifications-header {
-    padding: 15px;
-    border-bottom: 1px solid var(--card-bg);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.notifications-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-}
-
-.clear-notifications {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 5px;
-    transition: var(--transition);
-}
-
-.clear-notifications:hover {
-    background-color: var(--card-bg);
-}
-
-.notifications-content {
-    max-height: 350px;
-    overflow-y: auto;
-}
-
-.notification-item {
-    padding: 15px;
-    border-bottom: 1px solid var(--card-bg);
-    transition: var(--transition);
-    cursor: pointer;
-}
-
-.notification-item:hover {
-    background-color: var(--card-bg);
-}
-
-.notification-item .time {
-    font-size: 0.8rem;
-    color: var(--text-color);
-    opacity: 0.7;
-    margin-top: 5px;
-}
-
-.no-notifications {
-    padding: 20px;
-    text-align: center;
-    color: var(--text-color);
-    opacity: 0.7;
-}
-
-/* Container and Section Styles */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.section {
-    min-height: 100vh;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.section.active {
-    display: flex;
-    opacity: 1;
-}
-
-/* Welcome Section */
-#welcome {
-    text-align: center;
-}
-
-#welcome h1 {
-    font-size: 3.5rem;
-    margin-bottom: 10px;
-    color: var(--primary-color);
-}
-
-#welcome h2 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-}
-
-#welcome p {
-    font-size: 1.2rem;
-    margin-bottom: 30px;
-}
-
-/* Buttons */
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-.btn-success {
-    background-color: var(--success-color);
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-/* Habit Selection Grid */
-.habits-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-
-.habit-card {
-    background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: block;
-}
-
-.habit-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow);
-}
-
-.habit-card i {
-    font-size: 2.5rem;
-    color: var(--primary-color);
-    margin-bottom: 15px;
-}
-
-.habit-card h3 {
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-}
-
-.habit-card p {
-    font-size: 0.9rem;
-    color: var(--text-color);
-    opacity: 0.8;
-}
-
-.habit-card.hidden {
-    display: none;
-}
-
-.habit-card.fade-out {
-    opacity: 0;
-    transform: scale(0.95);
-}
-
-/* Info Card */
-.info-card {
-    background-color: var(--card-bg);
-    padding: 30px;
-    border-radius: 20px;
-    max-width: 800px;
-    margin: 0 auto;
-    box-shadow: var(--shadow);
-}
-
-.info-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
-}
-
-.info-item {
-    padding: 15px;
-    border-radius: 10px;
-    background-color: var(--bg-color);
-}
-
-.info-item.definition {
-    margin: 20px 0;
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.info-item.definition h3 {
-    color: white;
-    margin-bottom: 10px;
-}
-
-.info-item.definition p {
-    color: white;
-    opacity: 0.9;
-    line-height: 1.5;
-}
-
-.motivation {
-    grid-column: 1 / -1;
-    text-align: center;
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    font-weight: bold;
-}
-
-/* Progress Tracking */
-.progress-card {
-    background-color: var(--card-bg);
-    padding: 30px;
-    border-radius: 20px;
-    text-align: center;
-    max-width: 600px;
-    margin: 0 auto;
-    box-shadow: var(--shadow);
-}
-
-.streak-counter {
-    margin-bottom: 30px;
-}
-
-.streak-number {
-    font-size: 4rem;
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.progress-bar-container {
-    height: 20px;
-    background-color: var(--bg-color);
-    border-radius: 10px;
-    margin: 20px 0;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background-color: var(--primary-color);
-    width: 0;
-    transition: width 0.5s ease;
-}
-
-.motivation-message {
-    margin: 20px 0;
-    font-size: 1.1rem;
-    color: var(--success-color);
-}
-
-/* Features Grid on Welcome Page */
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
-    margin-top: 40px;
-}
-
-.feature-item {
-    background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    transition: var(--transition);
-}
-
-.feature-item:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow);
-}
-
-.feature-item i {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-bottom: 10px;
-}
-
-.feature-item span {
-    display: block;
-    font-size: 1.1rem;
-}
-
-/* Notification Container */
-.notification-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.notification {
-    background-color: var(--card-bg);
-    color: var(--text-color);
-    padding: 15px 25px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    box-shadow: var(--shadow);
-    animation: slideIn 0.3s ease forwards;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.notification i {
-    font-size: 1.2rem;
-    color: var(--primary-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* Features Section in Progress Tracking */
-.features-section {
-    margin-top: 40px;
-    display: grid;
-    gap: 30px;
-}
-
-/* Achievements Section */
-.achievements-section {
-    background-color: var(--bg-color);
-    padding: 20px;
-    border-radius: 15px;
-}
-
-.achievements-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.achievement-item {
-    background-color: var(--card-bg);
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-    opacity: 0.5;
-    transition: var(--transition);
-}
-
-.achievement-item.unlocked {
-    opacity: 1;
-    box-shadow: var(--shadow);
-}
-
-.achievement-item i {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-bottom: 10px;
-}
-
-/* Statistics Section */
-.statistics-section {
-    background-color: var(--bg-color);
-    padding: 20px;
-    border-radius: 15px;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.stat-item {
-    background-color: var(--card-bg);
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.stat-label {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-}
-
-.stat-value {
-    display: block;
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-/* Daily Tip Section */
-.daily-tip-section {
-    background-color: var(--bg-color);
-    padding: 20px;
-    border-radius: 15px;
-    margin-top: 20px;
-}
-
-.daily-tip-card {
-    background-color: var(--card-bg);
-    padding: 25px;
-    border-radius: 10px;
-    margin-top: 15px;
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    transition: var(--transition);
-}
-
-.daily-tip-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-.daily-tip-card i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin-top: 3px;
-}
-
-.daily-tip-card p {
-    margin: 0;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    flex: 1;
-}
-
-/* Share Section */
-.share-section {
-    background-color: var(--bg-color);
-    padding: 20px;
-    border-radius: 15px;
-    margin-top: 20px;
-}
-
-.share-buttons {
-    display: flex;
-    justify-content: center;
-    margin-top: 15px;
-}
-
-.btn-share {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.1rem;
-    font-family: 'Cairo', sans-serif;
-}
-
-.btn-share:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-    opacity: 0.9;
-}
-
-.btn-share i {
-    font-size: 1.2rem;
-}
-
-/* Responsive Design Updates */
-@media (max-width: 768px) {
-    #welcome h1 {
-        font-size: 2.5rem;
-    }
-
-    #welcome h2 {
-        font-size: 1.5rem;
-    }
-
-    .info-content {
-        grid-template-columns: 1fr;
-    }
-
-    .container {
-        padding: 15px;
-    }
-
-    .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.section.active {
-    animation: fadeIn 0.5s ease forwards;
-}
-
-/* Animation for Achievement Unlock */
-@keyframes unlock {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* Navigation Bar */
-.main-nav {
-    background-color: var(--bg-color);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 1rem 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.nav-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-}
-
-.nav-link {
-    color: var(--text-color);
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.nav-link i {
-    font-size: 1.2rem;
-}
-
-.nav-link:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.nav-link.active {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-/* About Section */
-.about-content, .privacy-content {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.about-card, .privacy-card {
-    background-color: var(--card-bg);
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.about-card h3, .privacy-card h3 {
-    color: var(--primary-color);
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.about-card p, .privacy-card p {
-    line-height: 1.6;
-    margin-bottom: 1rem;
-}
-
-.about-card ul, .privacy-card ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 1rem 0;
-}
-
-.about-card li, .privacy-card li {
-    margin-bottom: 0.5rem;
-    padding-right: 1.5rem;
-    position: relative;
-}
-
-.about-card li:before, .privacy-card li:before {
-    content: "•";
-    color: var(--primary-color);
-    position: absolute;
-    right: 0;
-}
-
-/* Dark Mode Adjustments */
-.dark-mode .about-card,
-.dark-mode .privacy-card {
-    background-color: var(--dark-card-bg);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-container {
-        gap: 1rem;
-    }
-
-    .nav-link {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.9rem;
-    }
-
-    .about-content,
-    .privacy-content {
-        padding: 1rem;
-    }
-
-    .about-card,
-    .privacy-card {
-        padding: 1.5rem;
-    }
-}
-
-/* More Habits Section */
-.section-description {
-    text-align: center;
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    color: var(--text-color);
-}
-
-.habits-grid.extended {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-}
-
-.habits-grid.extended .habit-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1.5rem;
-    transition: all 0.3s ease;
-}
-
-.habits-grid.extended .habit-card p {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    color: var(--text-color);
-    opacity: 0.8;
-}
-
-.habits-grid.extended .habit-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.habits-grid.extended .habit-card i {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-}
-
-.habits-grid.extended .habit-card h3 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-}
-
-/* Dark Mode Adjustments */
-.dark-mode .habits-grid.extended .habit-card {
-    background-color: var(--card-bg);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .habits-grid.extended {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    .habits-grid.extended .habit-card {
-        padding: 1rem;
-    }
-
-    .section-description {
-        font-size: 1rem;
-        margin-bottom: 1.5rem;
-    }
-}
-
-/* Search Box Styles */
-.search-container {
-    margin: 2rem 0;
-    display: flex;
-    justify-content: center;
-}
-
-.search-box {
-    position: relative;
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 1rem 3rem 1rem 1rem;
-    border: 2px solid var(--card-bg);
-    border-radius: 25px;
-    font-size: 1.1rem;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    transition: all 0.3s ease;
-    font-family: 'Cairo', sans-serif;
-}
-
-.search-box input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-}
-
-.search-box i {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-color);
-    opacity: 0.5;
-    font-size: 1.2rem;
-}
-
-/* No Results Message */
-.no-results {
-    text-align: center;
-    padding: 2rem;
-    display: none;
-    margin-top: 2rem;
-}
-
-.no-results i {
-    font-size: 3rem;
-    color: var(--text-color);
-    opacity: 0.3;
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.no-results p {
-    font-size: 1.2rem;
-    color: var(--text-color);
-    opacity: 0.7;
-}
-
-/* Dark Mode Adjustments */
-.dark-mode .search-box input {
-    background-color: var(--card-bg);
-    border-color: var(--bg-color);
-}
-
-.dark-mode .search-box input:focus {
-    border-color: var(--primary-color);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .search-box input {
-        font-size: 1rem;
-        padding: 0.8rem 2.5rem 0.8rem 0.8rem;
-    }
-
-    .search-box i {
-        font-size: 1rem;
-    }
-}
-
-/* Back Button */
-.back-btn {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-family: 'Cairo', sans-serif;
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.back-btn:hover {
-    background-color: var(--card-bg);
-    transform: translateX(5px);
-}
-
-.back-btn i {
-    font-size: 1.2rem;
-}
-
-/* Dark Mode Adjustment */
-.dark-mode .back-btn:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-/* Break Message Styles */
-.break-message {
-    background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 15px;
-    margin: 20px 0;
-    text-align: right;
-}
-
-.break-message h3 {
-    color: var(--primary-color);
-    margin-bottom: 15px;
-    font-size: 1.3rem;
-}
-
-.break-message p {
-    margin-bottom: 15px;
-    line-height: 1.6;
-}
-
-.break-tips {
-    background-color: var(--bg-color);
-    padding: 15px;
-    border-radius: 10px;
-    margin: 15px 0;
-}
-
-.break-tips h4 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
-}
-
-.break-tips ul {
-    list-style: none;
-    padding: 0;
-}
-
-.break-tips li {
-    margin: 10px 0;
-    padding-right: 20px;
-    position: relative;
-}
-
-.break-tips li:before {
-    content: "•";
-    color: var(--primary-color);
-    position: absolute;
-    right: 0;
-}
-
-.break-motivation {
-    font-weight: bold;
-    color: var(--success-color);
-    font-size: 1.1rem;
-    text-align: center;
-    margin-top: 20px;
-}
-
-/* Dark Mode Adjustments */
-.dark-mode .break-message {
-    background-color: var(--card-bg);
-}
-
-.dark-mode .break-tips {
-    background-color: var(--bg-color);
-}
-
-/* Responsive Design - Global */
-@media (max-width: 1200px) {
-    .container {
-        width: 95%;
-        padding: 15px;
-    }
-}
-
-@media (max-width: 992px) {
-    #welcome h1 {
-        font-size: 2.8rem;
-    }
-
-    .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-
-    .info-content {
-        grid-template-columns: 1fr;
-    }
-
-    .habits-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-
-    .theme-toggle {
-        top: 15px;
-        left: 15px;
-    }
-
-    .notifications-menu {
-        top: 15px;
-        right: 15px;
-    }
-
-    .notifications-toggle {
-        padding: 6px;
-    }
-}
-
-@media (max-width: 768px) {
-    body {
-        font-size: 16px;
-    }
-
-    #welcome h1 {
-        font-size: 2.2rem;
-        margin-bottom: 15px;
-    }
-
-    #welcome h2 {
-        font-size: 1.6rem;
-        margin-bottom: 15px;
-    }
-
-    .container {
-        padding: 10px;
-    }
-
-    .habits-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 15px;
-    }
-
-    .habit-card {
-        padding: 15px;
-    }
-
-    .habit-card i {
-        font-size: 2rem;
-    }
-
-    .streak-number {
-        font-size: 2.5rem;
-    }
-
-    .nav-container {
-        padding: 10px;
-        justify-content: space-around;
-    }
-
-    .nav-link {
-        font-size: 0.9rem;
-        padding: 8px;
-    }
-
-    .info-card {
-        padding: 20px;
-    }
-
-    .daily-tip-card {
-        padding: 15px;
-    }
-
-    .daily-tip-card p {
-        font-size: 0.9rem;
-    }
-
-    .features-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-
-    .notifications-list {
-        position: fixed;
-        top: 50px;
-        left: 10px;
-        right: 10px;
-        width: auto;
-        max-height: calc(100vh - 120px);
-    }
-
-    .theme-toggle {
-        top: 10px;
-        left: 10px;
-    }
-
-    .notifications-menu {
-        top: 10px;
-        right: 10px;
-    }
-}
-
-@media (max-width: 576px) {
-    #welcome h1 {
-        font-size: 1.8rem;
-    }
-
-    #welcome h2 {
-        font-size: 1.4rem;
-    }
-
-    .btn-primary, 
-    .btn-success, 
-    .btn-share {
-        padding: 12px 20px;
-        font-size: 1rem;
-        width: 100%;
-        margin: 5px 0;
-    }
-
-    .habits-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .streak-number {
-        font-size: 2rem;
-    }
-
-    .progress-card {
-        padding: 15px;
-    }
-
-    .notification {
-        padding: 10px;
-        margin: 5px;
-    }
-
-    .search-box input {
-        font-size: 0.9rem;
-        padding: 8px 35px 8px 15px;
-    }
-
-    .break-message h3 {
-        font-size: 1.2rem;
-    }
-
-    .break-message p {
-        font-size: 0.9rem;
-    }
-
-    .feature-item {
-        padding: 15px;
-    }
-
-    .info-item h3 {
-        font-size: 1.2rem;
-    }
-
-    .theme-toggle button,
-    .notifications-toggle {
-        font-size: 1.1rem;
-        padding: 6px;
-    }
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) {
-    .habit-card:active,
-    .btn-primary:active,
-    .btn-success:active,
-    .btn-share:active {
-        transform: scale(0.98);
-    }
-
-    .nav-link:active {
-        background-color: var(--card-bg);
-    }
-
-    .feature-item:active {
-        transform: translateY(-2px);
-    }
-}
-
-/* Fix for iOS Safari 100vh issue */
-@supports (-webkit-touch-callout: none) {
-    .section {
-        min-height: -webkit-fill-available;
-    }
-}
-
-/* RTL Support Improvements */
-html[dir="rtl"] .search-box input {
-    padding: 10px 45px 10px 20px;
-}
-
-html[dir="rtl"] .back-btn i {
-    transform: rotate(180deg);
-}
-
-/* Improve Navigation on Small Screens */
-@media (max-width: 480px) {
-    .nav-container {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background-color: var(--bg-color);
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-        padding: 10px 5px;
-        z-index: 1000;
-    }
-
-    .nav-link {
-        flex-direction: column;
-        font-size: 0.8rem;
-        padding: 8px 5px;
-    }
-
-    .nav-link i {
-        margin: 0 0 5px 0;
-        font-size: 1.2rem;
-    }
-
-    .section {
-        padding-bottom: 70px;
-    }
-
-    .notifications-menu {
-        position: fixed;
-        top: 8px;
-        right: 8px;
-    }
-
-    .theme-toggle {
-        top: 8px;
-        left: 8px;
-    }
-
-    .theme-toggle button,
-    .notifications-toggle {
-        font-size: 1.1rem;
-        padding: 6px;
-    }
-}
-
-/* Improve Form Elements on Mobile */
-@media (max-width: 768px) {
-    input, 
-    button, 
-    select, 
-    textarea {
-        font-size: 16px !important; /* Prevent iOS zoom on focus */
-    }
-
-    .search-box {
-        margin: 10px 0;
-    }
-}
-
-/* Dark Mode Improvements */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    }
-}
-
-/* Loading State */
-.section.loading {
-    opacity: 0.7;
-    pointer-events: none;
-}
-
-/* Smooth Scrolling */
-html {
-    scroll-behavior: smooth;
-}
-
-/* RTL Specific Adjustments for Notifications */
-.notifications-menu {
-    margin-right: 0;
-    margin-left: 10px;
-}
-
-.notifications-count {
-    right: auto;
-    left: 0;
-}
-
-.notifications-list {
-    left: auto;
-    right: 0;
-}
-
-/* Responsive Design for Notifications */
-@media (max-width: 768px) {
-    .notifications-list {
-        position: fixed;
-        top: 60px;
-        left: 10px;
-        right: 10px;
-        width: auto;
-        max-height: calc(100vh - 80px);
+// Habit data
+const habitsData = {
+    smoking: {
+        title: 'التدخين',
+        definition: 'تعاطي التبغ ومنتجاته بشكل منتظم، مما يؤدي إلى الإدمان الجسدي والنفسي.',
+        harm: 'يؤدي التدخين إلى تدمير الرئتين وزيادة خطر الإصابة بالسرطان وأمراض القلب.',
+        effect: 'يضعف جهاز المناعة ويقلل من مستويات الطاقة ويسبب الشيخوخة المبكرة.',
+        stat: '٧ ملايين شخص يموتون سنوياً بسبب التدخين حول العالم.',
+        motivation: 'كل يوم بدون تدخين هو انتصار لصحتك وحياتك!'
+    },
+    procrastination: {
+        title: 'التسويف',
+        definition: 'تأجيل المهام والمسؤوليات رغم القدرة على إنجازها، مما يؤدي إلى تراكم الضغوط.',
+        harm: 'يؤدي إلى تراكم المهام وزيادة التوتر والقلق وفقدان الفرص.',
+        effect: 'يؤثر سلباً على الإنتاجية والثقة بالنفس والعلاقات المهنية.',
+        stat: '٢٠٪ من سكان العالم يعانون من التسويف المزمن.',
+        motivation: 'اليوم هو أفضل وقت للبدء. لا تؤجل سعادتك ونجاحك!'
+    },
+    'late-sleep': {
+        title: 'السهر',
+        definition: 'نمط نوم غير صحي يتمثل في النوم متأخراً والاستيقاظ متأخراً، مما يخل بالإيقاع الطبيعي للجسم.',
+        harm: 'يضعف الذاكرة ويقلل التركيز ويؤثر على الصحة النفسية.',
+        effect: 'يخل بإيقاع الساعة البيولوجية ويضعف جهاز المناعة.',
+        stat: '٤٠٪ من البالغين ينامون أقل من ٧ ساعات يومياً.',
+        motivation: 'نوم صحي يعني حياة أفضل. استثمر في راحتك!'
+    },
+    'phone-addiction': {
+        title: 'إدمان الهاتف',
+        definition: 'استخدام مفرط للهاتف الذكي يتداخل مع الأنشطة اليومية والعلاقات الاجتماعية.',
+        harm: 'يسبب مشاكل في العين والرقبة ويؤثر على جودة النوم.',
+        effect: 'يقلل التركيز ويضعف العلاقات الاجتماعية الحقيقية.',
+        stat: 'يقضي الشخص العادي ٤ ساعات يومياً على هاتفه.',
+        motivation: 'عش اللحظة الحقيقية. الحياة أجمل خارج الشاشة!'
+    },
+    'unhealthy-food': {
+        title: 'الأكل غير الصحي',
+        definition: 'تناول الأطعمة الغنية بالدهون والسكريات والمعالجة، مع قلة تناول الأطعمة الصحية.',
+        harm: 'يزيد من خطر السمنة وأمراض القلب والسكري.',
+        effect: 'يؤثر على مستويات الطاقة والمزاج والصحة العامة.',
+        stat: '٢.٨ مليون شخص يموتون سنوياً بسبب السمنة.',
+        motivation: 'طعامك هو وقودك. اختر الأفضل لجسمك!'
+    },
+    'negative-thinking': {
+        title: 'التفكير السلبي',
+        definition: 'نمط تفكير يركز على الجوانب السلبية في المواقف والأحداث، مما يؤثر على النظرة للحياة.',
+        harm: 'يزيد من مستويات التوتر والاكتئاب ويضعف المناعة.',
+        effect: 'يؤثر على العلاقات الشخصية والنجاح المهني والسعادة.',
+        stat: '٨٠٪ من أفكارنا اليومية سلبية إذا لم نتحكم بها.',
+        motivation: 'أفكارك تصنع واقعك. اختر الإيجابية!'
+    },
+    'social-media': {
+        title: 'إدمان مواقع التواصل',
+        definition: 'قضاء وقت طويل في تصفح مواقع التواصل الاجتماعي بشكل يؤثر على الحياة اليومية.',
+        harm: 'يؤدي إلى إهدار الوقت وضعف التركيز والعزلة الاجتماعية الحقيقية.',
+        effect: 'يؤثر على الإنتاجية والصحة النفسية والعلاقات الواقعية.',
+        stat: 'يقضي المستخدم العادي 2.5 ساعة يومياً على مواقع التواصل.',
+        motivation: 'الحياة الحقيقية أجمل وأكثر قيمة من العالم الافتراضي.'
+    },
+    'nail-biting': {
+        title: 'قضم الأظافر',
+        definition: 'عادة عصبية لا إرادية تتمثل في قضم الأظافر، غالباً ما تكون مرتبطة بالتوتر والقلق.',
+        harm: 'يسبب تلف الأظافر والأسنان ويزيد خطر العدوى البكتيرية.',
+        effect: 'يؤثر على مظهر اليدين والثقة بالنفس ويعكس التوتر.',
+        stat: '30% من البالغين يعانون من هذه العادة.',
+        motivation: 'يداك تستحقان العناية والاهتمام.'
+    },
+    'impulse-buying': {
+        title: 'الشراء الاندفاعي',
+        definition: 'شراء منتجات غير مخطط لها بناءً على رغبة لحظية دون تفكير في العواقب المالية.',
+        harm: 'يؤدي إلى مشاكل مالية وتراكم أشياء غير ضرورية.',
+        effect: 'يسبب الندم والتوتر المالي والفوضى في المنزل.',
+        stat: '40% من قرارات الشراء تتم بشكل اندفاعي.',
+        motivation: 'التخطيط المالي يمنحك حرية وراحة بال أكبر.'
+    },
+    'interrupting': {
+        title: 'مقاطعة الآخرين',
+        definition: 'التحدث قبل انتهاء الشخص الآخر من كلامه، مما يعيق التواصل الفعال.',
+        harm: 'تضر بالعلاقات الشخصية والمهنية وتظهر عدم الاحترام.',
+        effect: 'تؤثر على جودة التواصل وفهم الآخرين.',
+        stat: '60% من سوء التفاهم يحدث بسبب المقاطعة.',
+        motivation: 'الإنصات الجيد يفتح آفاقاً جديدة للفهم والتعلم.'
+    },
+    'perfectionism': {
+        title: 'الكمالية المفرطة',
+        definition: 'السعي المستمر للكمال في كل شيء، مما يؤدي إلى الضغط النفسي وتأخير الإنجاز.',
+        harm: 'تسبب التوتر والقلق وتأخير إنجاز المهام.',
+        effect: 'تعيق التقدم والإبداع والرضا عن الإنجازات.',
+        stat: '25% من الناس يعانون من الكمالية المفرطة.',
+        motivation: 'التقدم التدريجي أفضل من الكمال المستحيل.'
+    },
+    'self-criticism': {
+        title: 'النقد الذاتي المفرط',
+        definition: 'توجيه النقد المستمر للذات والتركيز على العيوب والأخطاء بشكل مبالغ فيه.',
+        harm: 'يؤدي إلى تدني تقدير الذات والاكتئاب.',
+        effect: 'يمنع من تقدير النجاحات والاستمتاع بالإنجازات.',
+        stat: '70% من الأفكار السلبية موجهة للذات.',
+        motivation: 'كن صديقاً لنفسك، الرفق بالذات يقود للنجاح.'
+    },
+    'stress-eating': {
+        title: 'الأكل العاطفي',
+        definition: 'اللجوء إلى الطعام كوسيلة للتعامل مع المشاعر السلبية والتوتر.',
+        harm: 'يؤدي إلى زيادة الوزن ومشاكل صحية.',
+        effect: 'يخلق علاقة غير صحية مع الطعام والمشاعر.',
+        stat: '50% من الناس يلجؤون للطعام عند التوتر.',
+        motivation: 'مشاعرك تستحق المعالجة، وجسمك يستحق الاحترام.'
+    },
+    'overthinking': {
+        title: 'التفكير الزائد',
+        definition: 'الإفراط في تحليل المواقف والقرارات بشكل يؤدي إلى الشلل الفكري والتردد.',
+        harm: 'يستنزف الطاقة العقلية ويسبب القلق والتوتر.',
+        effect: 'يعيق اتخاذ القرارات ويقلل من الاستمتاع بالحياة.',
+        stat: '80% من مخاوفنا لا تتحقق في الواقع.',
+        motivation: 'الحياة أبسط مما نتخيل، ثق في قراراتك.'
+    },
+    'porn-addiction': {
+        title: 'إدمان المحتوى الإباحي',
+        definition: 'استخدام قهري للمحتوى الإباحي يؤثر على الصحة النفسية والعلاقات الاجتماعية.',
+        harm: 'يؤثر سلباً على الدماغ ويغير نظرة الشخص للعلاقات الطبيعية.',
+        effect: 'يسبب العزلة الاجتماعية والاكتئاب وضعف الثقة بالنفس.',
+        stat: '40% من المدمنين يبدأون قبل سن 12 عاماً.',
+        motivation: 'أنت أقوى من إدمانك. كل يوم نظيف هو انتصار جديد.'
+    }
+};
+
+// Daily Tips Data
+const dailyTips = {
+    smoking: [
+        'خذ نفساً عميقاً من الهواء النقي كلما شعرت برغبة في التدخين',
+        'اشرب الماء بكثرة، يساعد في تخفيف الرغبة',
+        'مارس الرياضة، تساعد في تحسين المزاج وتقليل التوتر',
+        'احتفظ بسواك أو علكة خالية من السكر'
+    ],
+    procrastination: [
+        'قسم مهامك إلى أجزاء صغيرة يمكن إنجازها',
+        'ابدأ بأصعب مهمة في يومك',
+        'استخدم تقنية بومودورو: 25 دقيقة عمل، 5 دقائق راحة',
+        'أزل المشتتات من محيطك قبل البدء بالعمل'
+    ],
+    'late-sleep': [
+        'حدد موعداً ثابتاً للنوم والاستيقاظ',
+        'تجنب الشاشات قبل النوم بساعة',
+        'اجعل غرفتك مظلمة وهادئة',
+        'تجنب الكافيين بعد العصر'
+    ],
+    'phone-addiction': [
+        'ضع هاتفك في غرفة أخرى أثناء العمل',
+        'عطل الإشعارات غير الضرورية',
+        'حدد أوقاتاً محددة لتصفح مواقع التواصل',
+        'استخدم تطبيقات تتبع وقت الشاشة'
+    ],
+    'unhealthy-food': [
+        'حضّر وجباتك في المنزل',
+        'اشرب ماء قبل الأكل بـ 20 دقيقة',
+        'تناول الخضروات أولاً في وجبتك',
+        'خطط لوجباتك الأسبوعية مسبقاً'
+    ],
+    'negative-thinking': [
+        'اكتب ثلاثة أشياء إيجابية كل صباح',
+        'حول كل فكرة سلبية إلى تحدي إيجابي',
+        'تجنب مقارنة نفسك بالآخرين',
+        'مارس التأمل والتنفس العميق'
+    ],
+    'social-media': [
+        'حدد وقتاً محدداً لتصفح مواقع التواصل',
+        'عطل الإشعارات غير الضرورية',
+        'اجعل هاتفك بعيداً عن غرفة النوم',
+        'خصص وقتاً للقاء الأصدقاء وجهاً لوجه'
+    ],
+    'nail-biting': [
+        'استخدم طلاء أظافر مر الطعم',
+        'اشغل يديك بشيء آخر عند التوتر',
+        'حافظ على أظافرك مقصوصة ومرتبة',
+        'تعرف على مسببات التوتر وعالجها'
+    ],
+    'impulse-buying': [
+        'اكتب قائمة تسوق والتزم بها',
+        'انتظر 24 ساعة قبل أي شراء غير ضروري',
+        'اعمل ميزانية شهرية واتبعها',
+        'اسأل نفسك: هل أحتاج هذا حقاً؟'
+    ],
+    'interrupting': [
+        'خذ نفساً عميقاً قبل الرد',
+        'دوّن ملاحظاتك بدل المقاطعة',
+        'انتظر ثانيتين بعد انتهاء المتحدث',
+        'ركز على فهم الرسالة كاملة'
+    ],
+    'perfectionism': [
+        'حدد أولوياتك بواقعية',
+        'اقبل أن الأخطاء جزء من التعلم',
+        'ركز على التقدم وليس الكمال',
+        'احتفل بالإنجازات الصغيرة'
+    ],
+    'self-criticism': [
+        'اكتب ثلاث نقاط إيجابية عن نفسك يومياً',
+        'تحدث مع نفسك كما تتحدث مع صديق',
+        'حول النقد إلى فرص للتحسين',
+        'تذكر نجاحاتك السابقة'
+    ],
+    'stress-eating': [
+        'تعرف على مشاعرك قبل الأكل',
+        'مارس تمارين التنفس عند التوتر',
+        'اشرب ماء عند الشعور بالتوتر',
+        'جد بدائل صحية للتعامل مع التوتر'
+    ],
+    'overthinking': [
+        'حدد وقتاً محدداً للتفكير في المشكلة',
+        'اكتب أفكارك على ورقة',
+        'ركز على ما يمكنك التحكم به',
+        'مارس التأمل للتخلص من الأفكار السلبية'
+    ],
+    'porn-addiction': [
+        'ثبت برامج حماية على أجهزتك',
+        'اشغل وقت فراغك بالرياضة والهوايات المفيدة',
+        'تواصل مع مختص نفسي للمساعدة',
+        'شارك في مجموعات الدعم والتعافي'
+    ]
+};
+
+// DOM Elements
+const sections = document.querySelectorAll('.section');
+const startButton = document.getElementById('startButton');
+const habitCards = document.querySelectorAll('.habit-card');
+const startTrackingButton = document.getElementById('startTracking');
+const successButton = document.getElementById('successButton');
+const themeToggle = document.getElementById('themeToggle');
+const shareProgressBtn = document.getElementById('shareProgress');
+const habitSearch = document.getElementById('habitSearch');
+const noResults = document.getElementById('noResults');
+
+// Notifications Management
+let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+const maxNotifications = 50;
+
+// DOM Elements for notifications
+const notificationsToggle = document.querySelector('.notifications-toggle');
+const notificationsList = document.querySelector('.notifications-list');
+const notificationsCount = document.querySelector('.notifications-count');
+const notificationsContent = document.querySelector('.notifications-content');
+const clearNotificationsBtn = document.querySelector('.clear-notifications');
+
+// State Management
+let currentHabit = null;
+let streak = 0;
+let lastSuccessDate = null;
+let bestStreak = 0;
+
+// Theme Management
+function setTheme(isDark) {
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        document.body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        if (themeToggle) {
+            themeToggle.querySelector('i').classList.remove('fa-moon');
+            themeToggle.querySelector('i').classList.add('fa-sun');
+        }
+    } else {
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        if (themeToggle) {
+            themeToggle.querySelector('i').classList.remove('fa-sun');
+            themeToggle.querySelector('i').classList.add('fa-moon');
+        }
+    }
+}
+
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme === 'dark');
+}
+
+// Enhanced Notification System
+function setupNotificationSystem() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                setupDailyReminders();
+                setupStreakNotifications();
+            }
+        });
+    }
+}
+
+function setupDailyReminders() {
+    // Check every hour if the user hasn't logged their progress
+    setInterval(checkAndSendReminder, 1000 * 60 * 60); // Check every hour
+    checkAndSendReminder(); // Check immediately
+}
+
+function checkAndSendReminder() {
+    if (!currentHabit) return;
+
+    const now = new Date();
+    const lastSuccess = lastSuccessDate ? new Date(lastSuccessDate) : null;
+    
+    // If no success today and it's after 8 PM
+    if ((!lastSuccess || !isSameDay(lastSuccess, now)) && now.getHours() >= 20) {
+        sendNotification(
+            'تذكير يومي 🌟',
+            'لم تسجل التزامك اليوم بعد. لا تفوت فرصة تحسين عاداتك!',
+            {
+                tag: 'daily-reminder',
+                requireInteraction: true,
+                actions: [
+                    {
+                        action: 'open',
+                        title: 'تسجيل الآن'
+                    }
+                ]
+            }
+        );
+    }
+}
+
+function setupStreakNotifications() {
+    // Send motivational notifications based on streak milestones
+    if (streak > 0 && streak % 7 === 0) { // Weekly milestone
+        sendNotification(
+            'إنجاز أسبوعي رائع! 🎉',
+            `أكملت ${streak} أيام متتالية! أنت تصنع التغيير الحقيقي.`,
+            {
+                tag: 'streak-milestone',
+                requireInteraction: true
+            }
+        );
+    }
+}
+
+function sendNotification(title, message, options = {}) {
+    // First try to send a system notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+            body: message,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/badge.png',
+            dir: 'rtl',
+            lang: 'ar',
+            ...options
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+            // If there's a specific action to perform
+            if (options.onClick) {
+                options.onClick();
+            }
+        };
+    }
+
+    // Also show in-app notification
+    showInAppNotification(title, message, options);
+}
+
+function showInAppNotification(title, message, options = {}) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${options.type || ''}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <strong>${title}</strong>
+            <p>${message}</p>
+        </div>
+    `;
+
+    const container = document.getElementById('notificationContainer');
+    if (container) {
+        container.appendChild(notification);
+        
+        if (!options.persistent) {
+            setTimeout(() => {
+                notification.classList.add('notification-exit');
+                setTimeout(() => notification.remove(), 300);
+            }, options.duration || 5000);
+        }
+    }
+}
+
+function isSameDay(date1, date2) {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+}
+
+// Initialize the application when DOM is fully loaded
+// Navigation
+const navLinks = document.querySelectorAll('.nav-link');
+
+navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href').substring(1);
+        
+        // Update active link
+        navLinks.forEach(navLink => navLink.classList.remove('active'));
+        link.classList.add('active');
+        
+        // Show target section
+        showSection(targetId);
+    });
+});
+
+// Update navigation when sections change
+function showSection(sectionId) {
+    sections.forEach(section => {
+        section.classList.remove('active');
+    });
+    document.getElementById(sectionId).classList.add('active');
+    
+    // Update active nav link
+    navLinks.forEach(link => {
+        const linkTarget = link.getAttribute('href').substring(1);
+        if (linkTarget === sectionId) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+
+// Initialize the application when DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DOM Elements
+    const sections = document.querySelectorAll('.section');
+    const startButton = document.getElementById('startButton');
+    const habitCards = document.querySelectorAll('.habit-card');
+    const startTrackingButton = document.getElementById('startTracking');
+    const successButton = document.getElementById('successButton');
+    const themeToggle = document.getElementById('themeToggle');
+    const shareProgressBtn = document.getElementById('shareProgress');
+    const habitSearch = document.getElementById('habitSearch');
+    const noResults = document.getElementById('noResults');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const backButtons = document.querySelectorAll('.back-btn');
+    const notificationsToggle = document.querySelector('.notifications-toggle');
+    const notificationsList = document.querySelector('.notifications-list');
+    const notificationsCount = document.querySelector('.notifications-count');
+    const notificationsContent = document.querySelector('.notifications-content');
+    const clearNotificationsBtn = document.querySelector('.clear-notifications');
+
+    // Initialize theme
+    loadTheme();
+
+    // Theme Toggle with fixed functionality
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark-mode');
+            setTheme(isDark);
+        });
+    }
+
+    // Navigation
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            
+            // Update active link
+            navLinks.forEach(navLink => navLink.classList.remove('active'));
+            link.classList.add('active');
+            
+            // Show target section
+            showSection(targetId);
+        });
+    });
+
+    // Back buttons
+    backButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetSection = button.getAttribute('data-target');
+            showSection(targetSection);
+        });
+    });
+
+    // Start button
+    if (startButton) {
+        startButton.addEventListener('click', () => {
+            showSection('habitSelection');
+        });
+    }
+
+    // Habit cards
+    habitCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const habitId = card.dataset.habit;
+            // Reset state variables before switching habits
+            streak = 0;
+            lastSuccessDate = null;
+            bestStreak = 0;
+            currentHabit = habitId;
+            updateHabitInfo(habitId);
+            showDailyTip();
+            // Load the specific habit's progress after resetting state
+            loadProgress();
+            showSection('habitInfo');
+        });
+    });
+
+    // Start tracking button
+    if (startTrackingButton) {
+        startTrackingButton.addEventListener('click', () => {
+            showSection('progressTracking');
+            updateProgress();
+        });
+    }
+
+    // Success button with enhanced notifications
+    if (successButton) {
+        successButton.addEventListener('click', () => {
+            const today = new Date();
+            
+            if (lastSuccessDate && streak > 0) {
+                const lastDate = new Date(lastSuccessDate);
+                if (isSameDay(today, lastDate)) {
+                    showInAppNotification(
+                        'تنبيه',
+                        'لقد سجلت نجاحك لهذا اليوم بالفعل. عد غداً!',
+                        { type: 'info' }
+                    );
+                    return;
+                }
+            }
+            
+            streak++;
+            lastSuccessDate = today;
+            saveProgress();
+            updateProgress();
+            showDailyTip();
+            
+            // Send success notification
+            sendNotification(
+                'أحسنت! 🎉',
+                `لقد أكملت ${streak} يوم من النجاح! واصل التقدم!`,
+                {
+                    type: 'success',
+                    requireInteraction: true
+                }
+            );
+
+            setupStreakNotifications(); // Check for streak milestones
+        });
+    }
+
+    // Share Progress
+    if (shareProgressBtn) {
+        shareProgressBtn.addEventListener('click', async () => {
+            const habit = habitsData[currentHabit];
+            const shareText = `🎯 لقد نجحت في التغلب على ${habit.title} لمدة ${streak} يوم متتالي!\n` +
+                            `💪 أنا فخور بتقدمي في رحلة التغيير\n` +
+                            `#HabitCrusher #تحدي_العادات`;
+
+            try {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: 'Habit Crusher Progress',
+                        text: shareText
+                    });
+                } else {
+                    await navigator.clipboard.writeText(shareText);
+                    showNotification('تم النسخ', 'تم نسخ النص للمشاركة!');
+                }
+            } catch (error) {
+                const textarea = document.createElement('textarea');
+                textarea.value = shareText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('تم النسخ', 'تم نسخ النص للمشاركة!');
+                } catch (err) {
+                    showNotification('خطأ', 'لم نتمكن من نسخ النص');
+                }
+                document.body.removeChild(textarea);
+            }
+        });
+    }
+
+    // Initialize notifications system
+    initializeNotifications();
+    
+    // Add event listeners for notifications
+    if (notificationsToggle) {
+        notificationsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsList.classList.toggle('show');
+            if (notificationsList.classList.contains('show')) {
+                markAllAsRead();
+            }
+        });
+    }
+
+    if (clearNotificationsBtn) {
+        clearNotificationsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifications = [];
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateNotificationsUI();
+        });
+    }
+
+    // Close notifications on outside click
+    document.addEventListener('click', (e) => {
+        if (notificationsList && !notificationsList.contains(e.target) && !notificationsToggle.contains(e.target)) {
+            notificationsList.classList.remove('show');
+        }
+    });
+
+    // Initialize search functionality
+    initializeSearch();
+    
+    // Register service worker
+    registerServiceWorker();
+    
+    // Request permissions
+    requestPermissions();
+    
+    // Check last success time
+    if (currentHabit) {
+        checkLastSuccessTime();
+    }
+
+    // Setup enhanced notification system
+    setupNotificationSystem();
+});
+
+// Habit Info Update
+function updateHabitInfo(habitId) {
+    const habit = habitsData[habitId];
+    document.getElementById('habitTitle').textContent = habit.title;
+    document.getElementById('habitDefinition').textContent = habit.definition;
+    document.getElementById('habitHarm').textContent = habit.harm;
+    document.getElementById('habitEffect').textContent = habit.effect;
+    document.getElementById('habitStat').textContent = habit.stat;
+    document.getElementById('habitMotivation').textContent = habit.motivation;
+}
+
+// Progress Tracking
+function loadProgress() {
+    const savedData = localStorage.getItem(`habit_${currentHabit}`);
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        streak = data.streak;
+        bestStreak = data.bestStreak || streak;
+        lastSuccessDate = new Date(data.lastSuccessDate);
+        checkStreak();
+        checkLastSuccessTime();
+    }
+}
+
+function saveProgress() {
+    // Update best streak if current streak is higher
+    if (streak > bestStreak) {
+        bestStreak = streak;
+    }
+    
+    const data = {
+        streak,
+        bestStreak,
+        lastSuccessDate: new Date().toISOString()
+    };
+    localStorage.setItem(`habit_${currentHabit}`, JSON.stringify(data));
+}
+
+function checkStreak() {
+    if (lastSuccessDate) {
+        const today = new Date();
+        const lastDate = new Date(lastSuccessDate);
+        const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays > 1) {
+            // Store the broken streak value
+            const brokenStreak = streak;
+            streak = 0;
+            
+            // Show detailed break message
+            showStreakBreakMessage(brokenStreak, diffDays);
+        }
+    }
+}
+
+function showStreakBreakMessage(brokenStreak, missedDays) {
+    const habit = habitsData[currentHabit];
+    let message = `<div class="break-message">`;
+    
+    // Main message
+    message += `<h3>لا تقلق! الرحلة مستمرة 💪</h3>`;
+    message += `<p>لقد حققت ${brokenStreak} يوم من النجاح قبل هذا الانقطاع.</p>`;
+    
+    // Add best streak info if applicable
+    if (bestStreak > brokenStreak) {
+        message += `<p>تذكر أنك حققت سابقاً ${bestStreak} يوم متواصل! يمكنك تحقيق ذلك مرة أخرى.</p>`;
+    }
+    
+    // Add tips based on missed days
+    message += `<div class="break-tips">`;
+    message += `<h4>نصائح للاستمرار:</h4>`;
+    message += `<ul>`;
+    message += `<li>ضع تذكيراً يومياً لتسجيل تقدمك</li>`;
+    message += `<li>اربط العادة الجديدة بروتين يومي موجود</li>`;
+    message += `<li>احتفل بكل يوم نجاح مهما كان صغيراً</li>`;
+    message += `</ul>`;
+    message += `</div>`;
+    
+    // Add motivation
+    message += `<p class="break-motivation">${habit.motivation}</p>`;
+    message += `</div>`;
+    
+    // Show the message
+    const motivationElement = document.getElementById('motivationMessage');
+    motivationElement.innerHTML = message;
+    
+    // Add animation
+    motivationElement.style.animation = 'none';
+    motivationElement.offsetHeight; // Trigger reflow
+    motivationElement.style.animation = 'fadeIn 0.5s ease forwards';
+}
+
+function updateProgress() {
+    document.getElementById('streakCount').textContent = streak;
+    const progress = (streak % 30) / 30 * 100;
+    document.getElementById('progressBar').style.width = `${progress}%`;
+    
+    // Show start message if streak is 0
+    if (streak === 0) {
+        const startMessage = 'ابدأ اليوم! كل رحلة تبدأ بخطوة واحدة 🌱';
+        showMotivationMessage(startMessage);
+    }
+    
+    // Show special message for completing a month
+    if (streak > 0 && streak % 30 === 0) {
+        const monthCount = Math.floor(streak / 30);
+        const monthText = monthCount === 1 ? 'شهر' : 'شهور';
+        
+        const message = `أتممت ${monthCount} ${monthText} من التغيير الإيجابي! 🎉`;
+        showMotivationMessage(message);
+        addNotification('إنجاز جديد! 🏆', message, 'achievement');
+    }
+}
+
+function showMotivationMessage(message) {
+    const motivationElement = document.getElementById('motivationMessage');
+    motivationElement.textContent = message;
+    motivationElement.style.animation = 'none';
+    motivationElement.offsetHeight; // Trigger reflow
+    motivationElement.style.animation = 'fadeIn 0.5s ease forwards';
+}
+
+// Notification System
+function showNotification(title, message, options = {}) {
+    const notificationContainer = document.getElementById('notificationContainer');
+    if (!notificationContainer) {
+        const container = document.createElement('div');
+        container.id = 'notificationContainer';
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${options.type || ''}`;
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="${getNotificationIcon(options.type)}"></i>
+            <div class="notification-text">
+                <strong>${title}</strong>
+                <p>${message}</p>
+            </div>
+        </div>
+    `;
+
+    notificationContainer.appendChild(notification);
+
+    // Add to notifications list
+    addNotification(title, message, options.type || 'info');
+
+    // Auto remove after duration
+    if (!options.persistent) {
+        setTimeout(() => {
+            notification.classList.add('notification-exit');
+            setTimeout(() => notification.remove(), 300);
+        }, options.duration || 5000);
+    }
+
+    return notification;
+}
+
+// Get notification icon
+function getNotificationIcon(type) {
+    const icons = {
+        success: 'fas fa-check-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle',
+        welcome: 'fas fa-hand-paper',
+        achievement: 'fas fa-trophy',
+        reminder: 'fas fa-bell'
+    };
+    return icons[type] || icons.info;
+}
+
+// Check Last Success Time and Show Notification
+function checkLastSuccessTime() {
+    if (!lastSuccessDate) return;
+    
+    const now = new Date();
+    const lastDate = new Date(lastSuccessDate);
+    const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays >= 1) {
+        const habit = habitsData[currentHabit];
+        
+        // Get time of day for personalized message
+        const hour = now.getHours();
+        let timeBasedGreeting = '';
+        if (hour >= 5 && hour < 12) {
+            timeBasedGreeting = 'صباح الخير! ';
+        } else if (hour >= 12 && hour < 17) {
+            timeBasedGreeting = 'مساء الخير! ';
+        } else if (hour >= 17 && hour < 22) {
+            timeBasedGreeting = 'مساء سعيد! ';
+        } else {
+            timeBasedGreeting = 'تصبح على خير! ';
+        }
+
+        // Different messages based on number of missed days
+        let motivationalMessage = '';
+        let title = '';
+        let icon = '';
+
+        if (diffDays === 1) {
+            title = 'لم تسجل التزامك بالأمس 💭';
+            motivationalMessage = `لا تدع يوماً واحداً يوقف تقدمك! عد إلى المسار الصحيح اليوم.`;
+            icon = 'fas fa-history';
+        } else if (diffDays === 2) {
+            title = 'يومان بدون تسجيل 🤔';
+            motivationalMessage = `تذكر لماذا بدأت! قوتك في عودتك. سجل التزامك اليوم وواصل التقدم.`;
+            icon = 'fas fa-route';
+        } else if (diffDays <= 4) {
+            title = 'نفتقد وجودك! 💫';
+            motivationalMessage = `${diffDays} أيام مرت. لا تترك العادة القديمة تسيطر عليك. أنت أقوى من ذلك!`;
+            icon = 'fas fa-star';
+        } else if (diffDays <= 7) {
+            title = 'لا تستسلم! 💪';
+            motivationalMessage = `أسبوع تقريباً مر. تذكر كل تقدم حققته. يمكنك العودة أقوى!`;
+            icon = 'fas fa-fist-raised';
+        } else {
+            title = 'نحن نؤمن بك! ✨';
+            motivationalMessage = `مر ${diffDays} يوم، لكن لا يزال الوقت مناسباً للعودة. كل يوم هو فرصة جديدة!`;
+            icon = 'fas fa-sun';
+        }
+
+        // Add daily tip to the message
+        const tips = dailyTips[currentHabit];
+        const randomTip = tips[Math.floor(Math.random() * tips.length)];
+        
+        // Show in-app notification
+        showNotification(
+            `${timeBasedGreeting}${title}`,
+            `${motivationalMessage}\n\nنصيحة اليوم: ${randomTip}`,
+            {
+                type: 'reminder',
+                icon: icon,
+                duration: 10000,
+                persistent: true,
+                actions: [
+                    {
+                        id: 'record-success',
+                        text: 'تسجيل النجاح',
+                        handler: () => {
+                            successButton.click();
+                        },
+                        closeOnClick: true
+                    },
+                    {
+                        id: 'remind-later',
+                        text: 'تذكيري بعد ساعة',
+                        handler: () => {
+                            setTimeout(checkLastSuccessTime, 1000 * 60 * 60);
+                        },
+                        closeOnClick: true
+                    }
+                ]
+            }
+        );
+
+        // Send Push Notification if enabled
+        if (Notification.permission === 'granted') {
+            schedulePushNotification(
+                `${timeBasedGreeting}${title}`,
+                `${motivationalMessage}\n\nنصيحة اليوم: ${randomTip}`,
+                {
+                    tag: 'habit-reminder', // Prevents duplicate notifications
+                    renotify: true, // Allows the same notification to notify again
+                    requireInteraction: true, // Notification stays until user interacts
+                    actions: [
+                        {
+                            action: 'open',
+                            title: 'فتح التطبيق'
+                        }
+                    ]
+                }
+            );
+        }
+
+        // Schedule next reminder for tomorrow
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM tomorrow
+        const timeUntilTomorrow = tomorrow - now;
+        
+        setTimeout(checkLastSuccessTime, timeUntilTomorrow);
+    }
+}
+
+// Initialize search functionality
+function initializeSearch() {
+    const habitSearch = document.getElementById('habitSearch');
+    const habitCards = document.querySelectorAll('.habit-card');
+    const noResults = document.getElementById('noResults');
+
+    console.log('Search Elements:', {
+        searchInput: habitSearch,
+        cards: habitCards.length,
+        noResults: noResults
+    });
+
+    if (habitSearch) {
+        // Add input event listener
+        habitSearch.addEventListener('input', function() {
+            const searchTerm = this.value.trim().toLowerCase();
+            console.log('Searching for:', searchTerm);
+            
+            let hasResults = false;
+
+            habitCards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                const matches = title.includes(searchTerm) || description.includes(searchTerm);
+
+                card.style.display = matches ? 'block' : 'none';
+                if (matches) hasResults = true;
+            });
+
+            if (noResults) {
+                noResults.style.display = hasResults ? 'none' : 'block';
+            }
+        });
+
+        // Add click listeners to nav links for clearing search
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                habitSearch.value = '';
+                habitCards.forEach(card => {
+                    card.style.display = 'block';
+                });
+                if (noResults) {
+                    noResults.style.display = 'none';
+                }
+            });
+        });
+    }
+}
+
+// Daily Tip Functions
+function showDailyTip() {
+    if (!currentHabit) return;
+    
+    const tips = dailyTips[currentHabit];
+    const today = new Date();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+    const tipIndex = dayOfYear % tips.length;
+    const tip = tips[tipIndex];
+    
+    const dailyTipElement = document.getElementById('dailyTip');
+    if (dailyTipElement) {
+        dailyTipElement.innerHTML = `
+            <i class="fas fa-lightbulb"></i>
+            <p>${tip}</p>
+        `;
+    }
+}
+
+// Notifications Management
+function initializeNotifications() {
+    const notificationsToggle = document.querySelector('.notifications-toggle');
+    const notificationsList = document.querySelector('.notifications-list');
+    const clearNotificationsBtn = document.querySelector('.clear-notifications');
+
+    // Load saved notifications
+    notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+
+    // Add welcome notification if no notifications exist
+    if (notifications.length === 0) {
+        addNotification(
+            'مرحباً بك! 👋',
+            'ابدأ رحلة تحسين عاداتك اليوم',
+            'welcome'
+        );
+    }
+
+    // Update notifications UI
+    updateNotificationsUI();
+
+    // Add event listeners for notifications
+    if (notificationsToggle && notificationsList) {
+        notificationsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsList.classList.toggle('show');
+            if (notificationsList.classList.contains('show')) {
+                markAllAsRead();
+            }
+        });
+
+        // Close notifications on outside click
+        document.addEventListener('click', (e) => {
+            if (!notificationsList.contains(e.target) && !notificationsToggle.contains(e.target)) {
+                notificationsList.classList.remove('show');
+            }
+        });
+    }
+
+    // Clear notifications button
+    if (clearNotificationsBtn) {
+        clearNotificationsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifications = [];
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateNotificationsUI();
+            showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
+        });
+    }
+}
+
+// Add notification
+function addNotification(title, message, type = 'info') {
+    const notification = {
+        id: Date.now(),
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+
+    // Add to beginning of array
+    notifications.unshift(notification);
+
+    // Keep only the latest maxNotifications
+    if (notifications.length > maxNotifications) {
+        notifications = notifications.slice(0, maxNotifications);
+    }
+
+    // Save to localStorage
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+
+    // Update UI
+    updateNotificationsUI();
+
+    return notification;
+}
+
+// Update notifications UI
+function updateNotificationsUI() {
+    if (!notificationsCount || !notificationsContent) return;
+
+    // Update count
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationsCount.textContent = unreadCount;
+    notificationsCount.classList.toggle('show', unreadCount > 0);
+
+    // Update content
+    if (notifications.length === 0) {
+        notificationsContent.innerHTML = '<div class="no-notifications">لا توجد إشعارات</div>';
+        return;
+    }
+
+    notificationsContent.innerHTML = notifications.map(notification => `
+        <div class="notification-item ${notification.read ? 'read' : ''}" data-id="${notification.id}">
+            <div class="notification-icon">
+                ${getNotificationIcon(notification.type)}
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${notification.title}</div>
+                <div class="notification-message">${notification.message}</div>
+                <div class="notification-time">${formatTimestamp(notification.timestamp)}</div>
+            </div>
+        </div>
+    `).join('');
+
+    // Add click listeners to notification items
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const id = parseInt(item.dataset.id);
+            markNotificationAsRead(id);
+        });
+    });
+}
+
+// Mark single notification as read
+function markNotificationAsRead(id) {
+    notifications = notifications.map(n => {
+        if (n.id === id) {
+            return { ...n, read: true };
+        }
+        return n;
+    });
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    updateNotificationsUI();
+}
+
+// Mark all notifications as read
+function markAllAsRead() {
+    notifications = notifications.map(n => ({ ...n, read: true }));
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    updateNotificationsUI();
+}
+
+// Format timestamp
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) { // Less than 1 minute
+        return 'الآن';
+    } else if (diff < 3600000) { // Less than 1 hour
+        const minutes = Math.floor(diff / 60000);
+        return `منذ ${minutes} دقيقة`;
+    } else if (diff < 86400000) { // Less than 1 day
+        const hours = Math.floor(diff / 3600000);
+        return `منذ ${hours} ساعة`;
+    } else {
+        const days = Math.floor(diff / 86400000);
+        return `منذ ${days} يوم`;
+    }
+}
+
+// Request necessary permissions quietly in the background
+async function requestPermissions() {
+    try {
+        if ('Notification' in window) {
+            const notificationPermission = await Notification.requestPermission();
+            console.log('Notification permission:', notificationPermission);
+        }
+
+        // Request storage permission quietly
+        if ('persist' in navigator && 'storage' in navigator) {
+            const isPersisted = await navigator.storage.persist();
+            console.log('Storage permission:', isPersisted);
+            localStorage.setItem('storagePermission', isPersisted.toString());
+        }
+
+        return Notification.permission === 'granted';
+    } catch (error) {
+        console.error('Error requesting permissions:', error);
+        return false;
+    }
+}
+
+// Update Service Worker Registration
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator && 'Notification' in window) {
+        try {
+            // Register service worker
+            const registration = await navigator.serviceWorker.register('service-worker.js');
+            console.log('تم تسجيل Service Worker');
+
+            // Request notification permission
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                // Initialize notifications system
+                await initializeNotificationSystem(registration);
+            }
+        } catch (error) {
+            console.error('فشل في تسجيل Service Worker:', error);
+        }
+    }
+}
+
+// Initialize notification system
+async function initializeNotificationSystem(registration) {
+    // Schedule daily notifications
+    scheduleLocalNotification('morning', 9); // Morning notification at 9 AM
+    scheduleLocalNotification('evening', 20); // Evening notification at 8 PM
+    
+    // Setup notification for habit tracking
+    setupHabitTrackingNotifications(registration);
+}
+
+// Schedule local notification that works offline
+function scheduleLocalNotification(type, hour) {
+    const now = new Date();
+    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, 0);
+    
+    if (now > scheduledTime) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+    
+    const timeUntilNotification = scheduledTime - now;
+    
+    setTimeout(async () => {
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            
+            const title = 'محطم العادات السيئة';
+            const options = {
+                body: type === 'morning' 
+                    ? 'صباح الخير! لا تنس تسجيل تقدمك اليوم 🌟' 
+                    : 'مساء الخير! هل سجلت تقدمك اليوم؟ 🌙',
+                icon: '/icon.png',
+                badge: '/badge.png',
+                dir: 'rtl',
+                lang: 'ar',
+                requireInteraction: true,
+                silent: false,
+                tag: `daily-${type}`,
+                actions: [
+                    {
+                        action: 'open',
+                        title: 'فتح التطبيق'
+                    },
+                    {
+                        action: 'close',
+                        title: 'إغلاق'
+                    }
+                ]
+            };
+            
+            try {
+                await registration.showNotification(title, options);
+                // Schedule next notification
+                scheduleLocalNotification(type, hour);
+            } catch (error) {
+                console.error('فشل في إرسال الإشعار:', error);
+            }
+        }
+    }, timeUntilNotification);
+}
+
+// Setup notifications for habit tracking
+function setupHabitTrackingNotifications(registration) {
+    // Send notification when user completes a day
+    successButton.addEventListener('click', async () => {
+        if (streak > 0 && streak % 1 === 0) { // Send notification for each day
+            try {
+                await registration.showNotification('أحسنت! 🎉', {
+                    body: `لقد أكملت ${streak} يوم من النجاح! استمر في التقدم!`,
+                    icon: '/icon.png',
+                    badge: '/badge.png',
+                    dir: 'rtl',
+                    lang: 'ar',
+                    requireInteraction: true,
+                    silent: false,
+                    actions: [
+                        {
+                            action: 'share',
+                            title: 'مشاركة'
+                        }
+                    ]
+                });
+            } catch (error) {
+                console.error('فشل في إرسال إشعار النجاح:', error);
+            }
+        }
+    });
+}
+
+// Schedule Push Notification
+function schedulePushNotification(title, message, options = {}) {
+    if (Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+            body: message,
+            icon: '/icon.png', // Add your app icon path
+            badge: '/badge.png', // Add your badge icon path
+            ...options
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
     }
 } 
