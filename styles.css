@@ -914,35 +914,51 @@ body {
 @media (max-width: 1200px) {
     .container {
         width: 95%;
-        padding: 10px;
+        padding: 15px;
     }
 }
 
 @media (max-width: 992px) {
     #welcome h1 {
-        font-size: 3rem;
+        font-size: 2.8rem;
     }
 
     .features-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
     }
 
     .info-content {
         grid-template-columns: 1fr;
     }
-}
-
-@media (max-width: 768px) {
-    #welcome h1 {
-        font-size: 2.5rem;
-    }
-
-    #welcome h2 {
-        font-size: 1.5rem;
-    }
 
     .habits-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+
+    #welcome h1 {
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+    }
+
+    #welcome h2 {
+        font-size: 1.6rem;
+        margin-bottom: 15px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .habits-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 15px;
     }
 
     .habit-card {
@@ -954,18 +970,17 @@ body {
     }
 
     .streak-number {
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
 
     .nav-container {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem;
+        padding: 10px;
+        justify-content: space-around;
     }
 
     .nav-link {
-        padding: 0.4rem 0.6rem;
         font-size: 0.9rem;
+        padding: 8px;
     }
 
     .info-card {
@@ -977,22 +992,38 @@ body {
     }
 
     .daily-tip-card p {
-        font-size: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .notifications-list {
+        width: 100%;
+        max-width: 100%;
+        left: 0;
+        right: 0;
     }
 }
 
 @media (max-width: 576px) {
     #welcome h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     #welcome h2 {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
     }
 
-    .btn-primary, .btn-success, .btn-share {
+    .btn-primary, 
+    .btn-success, 
+    .btn-share {
         padding: 12px 20px;
         font-size: 1rem;
+        width: 100%;
+        margin: 5px 0;
     }
 
     .habits-grid {
@@ -1000,79 +1031,139 @@ body {
     }
 
     .streak-number {
-        font-size: 2.5rem;
+        font-size: 2rem;
     }
 
     .progress-card {
-        padding: 20px;
+        padding: 15px;
     }
 
     .notification {
-        padding: 10px 15px;
-        font-size: 0.9rem;
+        padding: 10px;
+        margin: 5px;
     }
 
     .search-box input {
-        padding: 0.8rem;
         font-size: 0.9rem;
+        padding: 8px 35px 8px 15px;
     }
 
     .break-message h3 {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
 
     .break-message p {
         font-size: 0.9rem;
     }
-}
 
-/* RTL Specific Responsive Fixes */
-@media (max-width: 768px) {
-    .nav-link i {
-        margin-left: 0.3rem;
+    .feature-item {
+        padding: 15px;
     }
 
-    .back-btn {
-        margin-right: 0.5rem;
-    }
-
-    .daily-tip-card i {
-        margin-left: 0.5rem;
+    .info-item h3 {
+        font-size: 1.2rem;
     }
 }
 
 /* Touch Device Optimizations */
 @media (hover: none) {
-    .habit-card:hover,
-    .feature-item:hover,
-    .daily-tip-card:hover {
-        transform: none;
-    }
-
+    .habit-card:active,
     .btn-primary:active,
     .btn-success:active,
     .btn-share:active {
         transform: scale(0.98);
     }
-}
 
-/* Print Media Query */
-@media print {
-    .theme-toggle,
-    .nav-container,
-    .btn-share,
-    .notification-container {
-        display: none;
+    .nav-link:active {
+        background-color: var(--card-bg);
     }
 
-    body {
-        background: white;
-        color: black;
+    .feature-item:active {
+        transform: translateY(-2px);
+    }
+}
+
+/* Fix for iOS Safari 100vh issue */
+@supports (-webkit-touch-callout: none) {
+    .section {
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* RTL Support Improvements */
+html[dir="rtl"] .search-box input {
+    padding: 10px 45px 10px 20px;
+}
+
+html[dir="rtl"] .back-btn i {
+    transform: rotate(180deg);
+}
+
+/* Improve Navigation on Small Screens */
+@media (max-width: 480px) {
+    .nav-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--bg-color);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        padding: 10px 5px;
+        z-index: 1000;
+    }
+
+    .nav-link {
+        flex-direction: column;
+        font-size: 0.8rem;
+        padding: 8px 5px;
+    }
+
+    .nav-link i {
+        margin: 0 0 5px 0;
+        font-size: 1.2rem;
     }
 
     .section {
-        page-break-inside: avoid;
+        padding-bottom: 70px;
     }
+
+    .notifications-menu {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+    }
+}
+
+/* Improve Form Elements on Mobile */
+@media (max-width: 768px) {
+    input, 
+    button, 
+    select, 
+    textarea {
+        font-size: 16px !important; /* Prevent iOS zoom on focus */
+    }
+
+    .search-box {
+        margin: 10px 0;
+    }
+}
+
+/* Dark Mode Improvements */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Loading State */
+.section.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
 }
 
 /* Notifications Menu */
