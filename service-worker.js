@@ -112,14 +112,75 @@ self.addEventListener('install', function(event) {
     );
 });
 
+self.addEventListener('activate', function(event) {
+    event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.filter(function(cacheName) {
+                    return cacheName.startsWith('habit-crusher-') && cacheName !== 'habit-crusher-v2';
+                }).map(function(cacheName) {
+                    return caches.delete(cacheName);
+                })
+            );
+        })
+    );
+});
+
 self.addEventListener('fetch', function(event) {
     event.respondWith(
-        caches.match(event.request)
-            .then(function(response) {
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request);
-            })
+        caches.match(event.request).then(function(response) {
+            return response || fetch(event.request);
+        })
     );
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+
+    // Handle different actions
+    if (event.action === 'open' || !event.action) {
+        // Focus on existing window if available, otherwise open new one
+        event.waitUntil(
+            clients.matchAll({
+                type: 'window',
+                includeUncontrolled: true
+            }).then(function(clientList) {
+                for (let i = 0; i < clientList.length; i++) {
+                    const client = clientList[i];
+                    if (client.url.includes(self.registration.scope) && 'focus' in client) {
+                        return client.focus();
+                    }
+                }
+                return clients.openWindow(self.registration.scope);
+            })
+        );
+    } else if (event.action === 'share') {
+        // Open the sharing interface
+        event.waitUntil(
+            clients.openWindow(`${self.registration.scope}#share`)
+        );
+    }
+});
+
+// Handle notification close
+self.addEventListener('notificationclose', function(event) {
+    // You can add analytics here if needed
+    console.log('Notification was closed', event.notification);
+});
+
+// Background Sync for offline support
+self.addEventListener('sync', function(event) {
+    if (event.tag === 'habit-update') {
+        event.waitUntil(
+            // Sync habit data when online
+            self.clients.matchAll().then(function(clients) {
+                clients.forEach(function(client) {
+                    client.postMessage({
+                        type: 'sync-complete'
+                    });
+                });
+            })
+        );
+    }
 }); 
