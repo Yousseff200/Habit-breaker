@@ -1,12 +1,15 @@
 {
     "name": "محطم العادات السيئة",
     "short_name": "محطم العادات",
-    "description": "تطبيق لمساعدتك في التغلب على العادات السيئة",
+    "description": "تطبيق لمساعدتك في التغلب على العادات السيئة وبناء عادات صحية جديدة",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#4CAF50",
-    "orientation": "portrait",
+    "theme_color": "#2196f3",
+    "orientation": "portrait-primary",
+    "dir": "rtl",
+    "lang": "ar",
+    "categories": ["lifestyle", "health", "productivity"],
     "icons": [
         {
             "src": "/icons/icon-72x72.png",
@@ -57,17 +60,55 @@
             "purpose": "any maskable"
         }
     ],
-    "permissions": [
-        "notifications",
-        "storage"
+    "screenshots": [
+        {
+            "src": "/screenshots/home.png",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "platform": "narrow",
+            "label": "الشاشة الرئيسية لتطبيق محطم العادات"
+        },
+        {
+            "src": "/screenshots/habits.png",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "platform": "narrow",
+            "label": "قائمة العادات السيئة"
+        },
+        {
+            "src": "/screenshots/tracking.png",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "platform": "narrow",
+            "label": "تتبع التقدم في كسر العادات"
+        }
     ],
     "shortcuts": [
         {
-            "name": "تسجيل تقدمك",
+            "name": "تسجيل تقدم اليوم",
             "short_name": "تسجيل",
-            "description": "سجل تقدمك اليومي",
+            "description": "سجل تقدمك اليومي في كسر العادات",
             "url": "/?action=track",
-            "icons": [{ "src": "/icons/track-96x96.png", "sizes": "96x96" }]
+            "icons": [{ "src": "/icons/track.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "إحصائياتي",
+            "short_name": "إحصائيات",
+            "description": "عرض إحصائيات التقدم",
+            "url": "/?action=stats",
+            "icons": [{ "src": "/icons/stats.png", "sizes": "192x192" }]
         }
-    ]
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "share_target": {
+        "action": "/?share-target",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url"
+        }
+    }
 } 
