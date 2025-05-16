@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غير متصل | محطم العادات</title>
+    <style>
+        :root {
+            --primary-color: #2196f3;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-color: #fff;
+                --bg-color: #1a1a1a;
+            }
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .offline-container {
+            padding: 2rem;
+            max-width: 600px;
+        }
+
+        .icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            font-size: 2rem;
+        }
+
+        p {
+            margin: 0 0 1.5rem;
+            line-height: 1.6;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .retry-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .retry-button:hover {
+            background-color: #1976d2;
+        }
+
+        .cached-data {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .cached-data.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="icon">📡</div>
+        <h1>أنت غير متصل بالإنترنت</h1>
+        <p>لا يمكن الوصول إلى التطبيق حالياً. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.</p>
+        <button class="retry-button" onclick="retryConnection()">
+            إعادة المحاولة
+        </button>
+        
+        <div id="cachedData" class="cached-data">
+            <h2>البيانات المحفوظة</h2>
+            <p>يمكنك الوصول إلى بعض المعلومات المحفوظة مسبقاً:</p>
+            <div id="cachedContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function retryConnection() {
+            window.location.reload();
+        }
+
+        // Check for cached data
+        async function checkCachedData() {
+            try {
+                const cache = await caches.open('habit-tracker-v1');
+                const cachedData = await cache.match('/');
+                
+                if (cachedData) {
+                    const cachedContent = document.getElementById('cachedContent');
+                    const data = await cachedData.json();
+                    
+                    if (data && data.habits) {
+                        document.getElementById('cachedData').classList.add('visible');
+                        cachedContent.innerHTML = `
+                            <p>آخر تحديث: ${new Date(data.lastUpdate).toLocaleString('ar-SA')}</p>
+                            <p>عدد العادات المتتبعة: ${data.habits.length}</p>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking cached data:', error);
+            }
+        }
+
+        // Check if we're offline
+        if (!navigator.onLine) {
+            checkCachedData();
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+    </script>
+</body>
+</html> 
