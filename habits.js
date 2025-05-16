@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showMotivation();
       notify('يوم جديد من المقاومة!', 'استمر في تحطيم عاداتك السيئة!');
       // إرسال إشعار تحفيزي عبر OneSignal إذا كان متاحًا
-      if (window.OneSignal) {
+      if (window.OneSignal && OneSignal.sendSelfNotification) {
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(function(OneSignal) {
           OneSignal.sendSelfNotification(
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'استمر في تحطيم عاداتك السيئة. أنت بطل اليوم! 💪',
             null,
             null
-          );
+          ).catch(function(e){});
         });
       }
     }
