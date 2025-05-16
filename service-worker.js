@@ -1,7 +1,7 @@
-// Service Worker for Push Notifications
+// Service Worker for Push Notifications and Background Sync
 self.addEventListener('push', function(event) {
     const options = {
-        body: event.data.text(),
+        body: event.data ? event.data.text() : 'حان وقت تسجيل تقدمك اليومي!',
         icon: '/icon.png',
         badge: '/badge.png',
         dir: 'rtl',
@@ -20,7 +20,11 @@ self.addEventListener('push', function(event) {
                 action: 'close',
                 title: 'إغلاق'
             }
-        ]
+        ],
+        // Make notification persistent
+        requireInteraction: true,
+        // Show notification even if the app is in foreground
+        silent: false
     };
 
     event.waitUntil(
@@ -31,16 +35,65 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
 
-    if (event.action === 'open') {
-        // Open the app when notification is clicked
+    if (event.action === 'open' || !event.action) {
+        // Focus on existing window if available, otherwise open new one
         event.waitUntil(
-            clients.openWindow('/')
+            clients.matchAll({
+                type: 'window',
+                includeUncontrolled: true
+            }).then(function(clientList) {
+                for (let i = 0; i < clientList.length; i++) {
+                    const client = clientList[i];
+                    if ('focus' in client) {
+                        return client.focus();
+                    }
+                }
+                if (clients.openWindow) {
+                    return clients.openWindow('/');
+                }
+            })
         );
     }
 });
 
+// Handle periodic background sync
+self.addEventListener('periodicsync', function(event) {
+    if (event.tag === 'check-habit-progress') {
+        event.waitUntil(checkAndSendNotification());
+    }
+});
+
+// Function to check progress and send notification if needed
+async function checkAndSendNotification() {
+    const now = new Date();
+    const hour = now.getHours();
+
+    // Send morning reminder (9 AM)
+    if (hour === 9) {
+        await self.registration.showNotification('محطم العادات السيئة', {
+            body: 'صباح الخير! لا تنس تسجيل تقدمك اليوم 🌟',
+            icon: '/icon.png',
+            badge: '/badge.png',
+            dir: 'rtl',
+            lang: 'ar',
+            requireInteraction: true
+        });
+    }
+    // Send evening reminder (8 PM)
+    else if (hour === 20) {
+        await self.registration.showNotification('محطم العادات السيئة', {
+            body: 'مساء الخير! هل سجلت تقدمك اليوم؟ 🌙',
+            icon: '/icon.png',
+            badge: '/badge.png',
+            dir: 'rtl',
+            lang: 'ar',
+            requireInteraction: true
+        });
+    }
+}
+
 // Cache the app shell for offline functionality
-const CACHE_NAME = 'habit-crusher-v1';
+const CACHE_NAME = 'habit-crusher-v2';
 const urlsToCache = [
     '/',
     '/index.html',
