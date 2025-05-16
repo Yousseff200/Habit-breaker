@@ -716,33 +716,65 @@ function showStreakBreakMessage(brokenStreak, missedDays) {
 }
 
 function updateProgress() {
-    document.getElementById('streakCount').textContent = streak;
-    const progress = (streak % 30) / 30 * 100;
-    document.getElementById('progressBar').style.width = `${progress}%`;
-    
-    // Show start message if streak is 0
-    if (streak === 0) {
-        const startMessage = 'ابدأ اليوم! كل رحلة تبدأ بخطوة واحدة 🌱';
-        showMotivationMessage(startMessage);
+    const streakElement = document.getElementById('streakCount');
+    const progressBar = document.getElementById('progressBar');
+    const motivationElement = document.getElementById('motivationMessage');
+
+    if (streakElement) {
+        streakElement.textContent = streak;
     }
-    
-    // Show special message for completing a month
-    if (streak > 0 && streak % 30 === 0) {
-        const monthCount = Math.floor(streak / 30);
-        const monthText = monthCount === 1 ? 'شهر' : 'شهور';
+
+    if (progressBar) {
+        const progress = (streak % 30) / 30 * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    if (motivationElement) {
+        const message = getMotivationalMessage(streak);
+        motivationElement.textContent = message;
         
-        const message = `أتممت ${monthCount} ${monthText} من التغيير الإيجابي! 🎉`;
-        showMotivationMessage(message);
-        addNotification('إنجاز جديد! 🏆', message, 'achievement');
+        // Add animation
+        motivationElement.style.animation = 'none';
+        motivationElement.offsetHeight; // Trigger reflow
+        motivationElement.style.animation = 'fadeIn 0.5s ease forwards';
+    }
+
+    // Show notification for milestones
+    if (streak > 0 && streak % 5 === 0) {
+        showNotification(
+            'إنجاز جديد! 🎉',
+            getMotivationalMessage(streak),
+            { type: 'achievement' }
+        );
     }
 }
 
-function showMotivationMessage(message) {
-    const motivationElement = document.getElementById('motivationMessage');
-    motivationElement.textContent = message;
-    motivationElement.style.animation = 'none';
-    motivationElement.offsetHeight; // Trigger reflow
-    motivationElement.style.animation = 'fadeIn 0.5s ease forwards';
+function getMotivationalMessage(streak) {
+    if (streak === 0) {
+        return 'ابدأ اليوم! كل رحلة تبدأ بخطوة واحدة 🌱';
+    }
+
+    const messages = [
+        { threshold: 1, message: 'أول يوم نجاح! استمر، أنت تستطيع! 💪' },
+        { threshold: 3, message: 'ثلاثة أيام متتالية! بداية رائعة! 🌟' },
+        { threshold: 5, message: 'خمسة أيام من النجاح! أنت تصنع التغيير! ✨' },
+        { threshold: 7, message: 'أسبوع كامل! إنجاز رائع! 🎉' },
+        { threshold: 10, message: 'عشرة أيام متتالية! أنت ملهم! 🏆' },
+        { threshold: 14, message: 'أسبوعان من النجاح! قوتك تزداد! 💫' },
+        { threshold: 21, message: 'ثلاثة أسابيع! العادة تتشكل! 🌈' },
+        { threshold: 30, message: 'شهر كامل! أنت بطل حقيقي! 👑' },
+        { threshold: 45, message: 'شهر ونصف! إرادتك من حديد! ⭐' },
+        { threshold: 60, message: 'شهران! أنت تلهم الآخرين! 🌟' },
+        { threshold: 90, message: 'ثلاثة أشهر! إنجاز استثنائي! 🎯' },
+        { threshold: 100, message: 'مائة يوم! أنت أسطورة! 🌠' }
+    ];
+
+    // Get the highest threshold that is less than or equal to current streak
+    const message = messages
+        .filter(m => m.threshold <= streak)
+        .pop() || messages[0];
+
+    return message.message;
 }
 
 // Notification System
@@ -981,42 +1013,37 @@ function showDailyTip() {
 
 // Notifications Management
 function initializeNotifications() {
-    // Get DOM elements
-    const notificationsToggle = document.querySelector('.notifications-toggle');
-    const notificationsList = document.querySelector('.notifications-list');
-    const notificationsCount = document.querySelector('.notifications-count');
-    const notificationsContent = document.querySelector('.notifications-content');
-    const clearNotificationsBtn = document.querySelector('.clear-notifications');
+    // Create notifications container if it doesn't exist
+    let notificationsMenu = document.querySelector('.notifications-menu');
+    if (!notificationsMenu) {
+        notificationsMenu = document.createElement('div');
+        notificationsMenu.className = 'notifications-menu';
+        document.body.appendChild(notificationsMenu);
+
+        const toggle = document.createElement('button');
+        toggle.className = 'notifications-toggle';
+        toggle.innerHTML = '<i class="fas fa-bell"></i>';
+        
+        const count = document.createElement('span');
+        count.className = 'notifications-count';
+        toggle.appendChild(count);
+        
+        notificationsMenu.appendChild(toggle);
+    }
 
     // Create notifications list if it doesn't exist
+    let notificationsList = document.querySelector('.notifications-list');
     if (!notificationsList) {
-        const notificationsMenu = document.createElement('div');
-        notificationsMenu.className = 'notifications-list';
-        notificationsMenu.innerHTML = `
+        notificationsList = document.createElement('div');
+        notificationsList.className = 'notifications-list';
+        notificationsList.innerHTML = `
             <div class="notifications-header">
                 <h3>الإشعارات</h3>
                 <button class="clear-notifications">مسح الكل</button>
             </div>
             <div class="notifications-content"></div>
         `;
-        document.body.appendChild(notificationsMenu);
-    }
-
-    // Create notifications toggle if it doesn't exist
-    if (!notificationsToggle) {
-        const toggle = document.createElement('button');
-        toggle.className = 'notifications-toggle';
-        toggle.innerHTML = '<i class="fas fa-bell"></i>';
-        const toggleContainer = document.createElement('div');
-        toggleContainer.className = 'notifications-menu';
-        toggleContainer.appendChild(toggle);
-        
-        // Add notifications count badge
-        const count = document.createElement('span');
-        count.className = 'notifications-count';
-        toggle.appendChild(count);
-        
-        document.body.appendChild(toggleContainer);
+        document.body.appendChild(notificationsList);
     }
 
     // Load saved notifications
@@ -1034,32 +1061,38 @@ function initializeNotifications() {
     // Update notifications UI
     updateNotificationsUI();
 
-    // Add event listeners for notifications toggle
-    document.querySelector('.notifications-toggle').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.querySelector('.notifications-list').classList.toggle('show');
-        if (document.querySelector('.notifications-list').classList.contains('show')) {
-            markAllAsRead();
-        }
-    });
+    // Add event listeners
+    const toggle = document.querySelector('.notifications-toggle');
+    const list = document.querySelector('.notifications-list');
+    const clearBtn = document.querySelector('.clear-notifications');
+
+    if (toggle) {
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            list.classList.toggle('show');
+            if (list.classList.contains('show')) {
+                markAllAsRead();
+            }
+        });
+    }
 
     // Close notifications on outside click
     document.addEventListener('click', (e) => {
-        const list = document.querySelector('.notifications-list');
-        const toggle = document.querySelector('.notifications-toggle');
-        if (list && toggle && !list.contains(e.target) && !toggle.contains(e.target)) {
+        if (list && !list.contains(e.target) && !toggle.contains(e.target)) {
             list.classList.remove('show');
         }
     });
 
     // Clear notifications button
-    document.querySelector('.clear-notifications').addEventListener('click', (e) => {
-        e.stopPropagation();
-        notifications = [];
-        localStorage.setItem('notifications', JSON.stringify(notifications));
-        updateNotificationsUI();
-        showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
-    });
+    if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifications = [];
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateNotificationsUI();
+            showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
+        });
+    }
 }
 
 // Update notifications UI
