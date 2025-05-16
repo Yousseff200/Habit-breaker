@@ -251,17 +251,17 @@ function setTheme(isDark) {
         document.body.classList.remove('light-mode');
         localStorage.setItem('theme', 'dark');
         if (themeToggle) {
-            themeToggle.querySelector('i').classList.remove('fa-moon');
-            themeToggle.querySelector('i').classList.add('fa-sun');
+        themeToggle.querySelector('i').classList.remove('fa-moon');
+        themeToggle.querySelector('i').classList.add('fa-sun');
         }
     } else {
         document.body.classList.remove('dark-mode');
         document.body.classList.add('light-mode');
         localStorage.setItem('theme', 'light');
         if (themeToggle) {
-            themeToggle.querySelector('i').classList.remove('fa-sun');
-            themeToggle.querySelector('i').classList.add('fa-moon');
-        }
+        themeToggle.querySelector('i').classList.remove('fa-sun');
+        themeToggle.querySelector('i').classList.add('fa-moon');
+    }
     }
 }
 
@@ -270,116 +270,304 @@ function loadTheme() {
     setTheme(savedTheme === 'dark');
 }
 
-// Enhanced Notification System
-function setupNotificationSystem() {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                setupDailyReminders();
-                setupStreakNotifications();
-            }
-        });
+// Enhanced Notification System Configuration
+const notificationConfig = {
+    maxNotifications: 50, // Maximum number of stored notifications
+    categories: {
+        ACHIEVEMENT: 'achievement',
+        REMINDER: 'reminder',
+        STREAK: 'streak',
+        SYSTEM: 'system',
+        MOTIVATION: 'motivation',
+        TIP: 'tip'
+    },
+    priorities: {
+        LOW: 0,
+        MEDIUM: 1,
+        HIGH: 2,
+        URGENT: 3
+    },
+    defaultDuration: 5000,
+    soundEnabled: true
+};
+
+// Enhanced notification system with categories and priorities
+function sendEnhancedNotification(title, message, options = {}) {
+    const {
+        category = notificationConfig.categories.SYSTEM,
+        priority = notificationConfig.priorities.MEDIUM,
+        duration = notificationConfig.defaultDuration,
+        actions = [],
+        icon = getNotificationIcon(category),
+        persistent = false,
+        sound = true,
+        data = {}
+    } = options;
+
+    // Create notification object
+    const notification = {
+        id: Date.now(),
+        title,
+        message,
+        category,
+        priority,
+        timestamp: new Date().toISOString(),
+        read: false,
+        data,
+        actions
+    };
+
+    // Add to notifications array
+    notifications.unshift(notification);
+
+    // Trim notifications array if exceeds max
+    if (notifications.length > notificationConfig.maxNotifications) {
+        notifications = notifications.slice(0, notificationConfig.maxNotifications);
     }
-}
 
-function setupDailyReminders() {
-    // Check every hour if the user hasn't logged their progress
-    setInterval(checkAndSendReminder, 1000 * 60 * 60); // Check every hour
-    checkAndSendReminder(); // Check immediately
-}
+    // Save to localStorage
+    localStorage.setItem('notifications', JSON.stringify(notifications));
 
-function checkAndSendReminder() {
-    if (!currentHabit) return;
+    // Show in-app notification
+    showInAppNotification(title, message, {
+        type: category,
+        duration: persistent ? null : duration,
+        actions,
+        icon
+    });
 
-    const now = new Date();
-    const lastSuccess = lastSuccessDate ? new Date(lastSuccessDate) : null;
-    
-    // If no success today and it's after 8 PM
-    if ((!lastSuccess || !isSameDay(lastSuccess, now)) && now.getHours() >= 20) {
-        sendNotification(
-            'تذكير يومي 🌟',
-            'لم تسجل التزامك اليوم بعد. لا تفوت فرصة تحسين عاداتك!',
-            {
-                tag: 'daily-reminder',
-                requireInteraction: true,
-                actions: [
-                    {
-                        action: 'open',
-                        title: 'تسجيل الآن'
-                    }
-                ]
-            }
-        );
+    // Play notification sound if enabled
+    if (sound && notificationConfig.soundEnabled) {
+        playNotificationSound(priority);
     }
-}
 
-function setupStreakNotifications() {
-    // Send motivational notifications based on streak milestones
-    if (streak > 0 && streak % 7 === 0) { // Weekly milestone
-        sendNotification(
-            'إنجاز أسبوعي رائع! 🎉',
-            `أكملت ${streak} أيام متتالية! أنت تصنع التغيير الحقيقي.`,
-            {
-                tag: 'streak-milestone',
-                requireInteraction: true
-            }
-        );
-    }
-}
-
-function sendNotification(title, message, options = {}) {
-    // First try to send a system notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-        const notification = new Notification(title, {
+    // Send push notification if permission granted
+    if (Notification.permission === 'granted') {
+        const pushOptions = {
             body: message,
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/badge.png',
+            icon: '/icon.png',
+            badge: '/badge.png',
             dir: 'rtl',
             lang: 'ar',
-            ...options
-        });
-
-        notification.onclick = function() {
-            window.focus();
-            notification.close();
-            // If there's a specific action to perform
-            if (options.onClick) {
-                options.onClick();
+            tag: `${category}-${notification.id}`,
+            requireInteraction: persistent,
+            actions: actions.map(action => ({
+                action: action.id,
+                title: action.text
+            })),
+            data: {
+                notificationId: notification.id,
+                category,
+                priority,
+                ...data
             }
         };
+
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, pushOptions);
+        });
     }
 
-    // Also show in-app notification
-    showInAppNotification(title, message, options);
+    // Update UI
+    updateNotificationsUI();
+    
+    return notification;
 }
 
-function showInAppNotification(title, message, options = {}) {
-    const notification = document.createElement('div');
-    notification.className = `notification ${options.type || ''}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <strong>${title}</strong>
-            <p>${message}</p>
-        </div>
-    `;
+// Play notification sound based on priority
+function playNotificationSound(priority) {
+    const audio = new Audio();
+    
+    switch (priority) {
+        case notificationConfig.priorities.URGENT:
+            audio.src = '/sounds/urgent.mp3';
+            break;
+        case notificationConfig.priorities.HIGH:
+            audio.src = '/sounds/high.mp3';
+            break;
+        case notificationConfig.priorities.MEDIUM:
+            audio.src = '/sounds/medium.mp3';
+            break;
+        default:
+            audio.src = '/sounds/low.mp3';
+    }
+    
+    audio.play().catch(error => console.log('Error playing notification sound:', error));
+}
 
-    const container = document.getElementById('notificationContainer');
-    if (container) {
-        container.appendChild(notification);
-        
-        if (!options.persistent) {
-            setTimeout(() => {
-                notification.classList.add('notification-exit');
-                setTimeout(() => notification.remove(), 300);
-            }, options.duration || 5000);
+// Enhanced notification actions handler
+function handleNotificationAction(notificationId, actionId) {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification) return;
+
+    const action = notification.actions.find(a => a.id === actionId);
+    if (!action || !action.handler) return;
+
+    // Execute action handler
+    action.handler();
+
+    // Mark as read if specified
+    if (action.markAsRead !== false) {
+        markNotificationAsRead(notificationId);
+    }
+
+    // Close notification if specified
+    if (action.closeOnClick !== false) {
+        const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
+        if (notificationElement) {
+            notificationElement.remove();
         }
     }
 }
 
-function isSameDay(date1, date2) {
-    return date1.getDate() === date2.getDate() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getFullYear() === date2.getFullYear();
+// Enhanced notification UI update
+function updateNotificationsUI() {
+    const notificationsCount = document.querySelector('.notifications-count');
+    const notificationsContent = document.querySelector('.notifications-content');
+    const notificationsToggle = document.querySelector('.notifications-toggle');
+    
+    if (!notificationsCount || !notificationsContent) return;
+
+    // Sort notifications by priority and date
+    const sortedNotifications = [...notifications].sort((a, b) => {
+        if (a.priority !== b.priority) {
+            return b.priority - a.priority;
+        }
+        return new Date(b.timestamp) - new Date(a.timestamp);
+    });
+
+    // Update count of unread notifications
+    const unreadCount = sortedNotifications.filter(n => !n.read).length;
+    notificationsCount.textContent = unreadCount;
+    
+    // Show/hide count badge and add animation
+    if (unreadCount > 0) {
+        notificationsCount.style.display = 'flex';
+        notificationsToggle.classList.add('has-notifications');
+    } else {
+        notificationsCount.style.display = 'none';
+        notificationsToggle.classList.remove('has-notifications');
+    }
+
+    // Update content
+    if (sortedNotifications.length === 0) {
+        notificationsContent.innerHTML = '<div class="no-notifications">لا توجد إشعارات</div>';
+        return;
+    }
+
+    // Group notifications by date
+    const groupedNotifications = groupNotificationsByDate(sortedNotifications);
+    
+    // Render grouped notifications
+    notificationsContent.innerHTML = Object.entries(groupedNotifications)
+        .map(([date, notifications]) => `
+            <div class="notification-group">
+                <div class="notification-date">${formatDateHeader(date)}</div>
+                ${notifications.map(notification => createNotificationHTML(notification)).join('')}
+            </div>
+        `).join('');
+
+    // Add click listeners to notification items
+    addNotificationListeners();
+}
+
+// Group notifications by date
+function groupNotificationsByDate(notifications) {
+    return notifications.reduce((groups, notification) => {
+        const date = new Date(notification.timestamp).toLocaleDateString('ar-EG');
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(notification);
+        return groups;
+    }, {});
+}
+
+// Create HTML for a single notification
+function createNotificationHTML(notification) {
+    const {
+        id,
+        title,
+        message,
+        category,
+        priority,
+        timestamp,
+        read,
+        actions = []
+    } = notification;
+
+    return `
+        <div class="notification-item ${read ? 'read' : ''}" 
+             data-notification-id="${id}"
+             data-category="${category}"
+             data-priority="${priority}">
+            <div class="notification-icon">
+                <i class="${getNotificationIcon(category)}"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-header">
+                    <div class="notification-title">
+                        ${title}
+                        ${priority >= notificationConfig.priorities.HIGH ? '<span class="priority-badge">⚡</span>' : ''}
+                        ${!read ? '<span class="unread-badge"></span>' : ''}
+                    </div>
+                </div>
+                <div class="notification-message">${message}</div>
+                <div class="notification-time" title="${new Date(timestamp).toLocaleString('ar-EG')}">
+                    ${formatTimestamp(timestamp)}
+                </div>
+                ${actions.length > 0 ? `
+                    <div class="notification-actions">
+                        ${actions.map(action => `
+                            <button class="notification-action-btn" 
+                                    data-action-id="${action.id}"
+                                    data-notification-id="${id}">
+                                ${action.text}
+                            </button>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Add event listeners to notification items
+function addNotificationListeners() {
+    // Click listeners for notification items
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const notificationId = parseInt(item.dataset.notificationId);
+            // Don't mark as read if clicking action button
+            if (!e.target.closest('.notification-action-btn')) {
+                markNotificationAsRead(notificationId);
+                updateNotificationsUI();
+            }
+        });
+    });
+
+    // Click listeners for action buttons
+    document.querySelectorAll('.notification-action-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const notificationId = parseInt(button.dataset.notificationId);
+            const actionId = button.dataset.actionId;
+            handleNotificationAction(notificationId, actionId);
+        });
+    });
+}
+
+// Format date header
+function formatDateHeader(date) {
+    const today = new Date().toLocaleDateString('ar-EG');
+    const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('ar-EG');
+    
+    if (date === today) {
+        return 'اليوم';
+    } else if (date === yesterday) {
+        return 'الأمس';
+    }
+    return date;
 }
 
 // Initialize the application when DOM is fully loaded
@@ -474,33 +662,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Start button
     if (startButton) {
-        startButton.addEventListener('click', () => {
-            showSection('habitSelection');
-        });
+startButton.addEventListener('click', () => {
+    showSection('habitSelection');
+});
     }
 
     // Habit cards
-    habitCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const habitId = card.dataset.habit;
-            // Reset state variables before switching habits
-            streak = 0;
-            lastSuccessDate = null;
-            bestStreak = 0;
-            currentHabit = habitId;
-            updateHabitInfo(habitId);
-            showDailyTip();
-            // Load the specific habit's progress after resetting state
-            loadProgress();
-            showSection('habitInfo');
-        });
+habitCards.forEach(card => {
+    card.addEventListener('click', () => {
+        const habitId = card.dataset.habit;
+        // Reset state variables before switching habits
+        streak = 0;
+        lastSuccessDate = null;
+        bestStreak = 0;
+        currentHabit = habitId;
+        updateHabitInfo(habitId);
+        showDailyTip();
+        // Load the specific habit's progress after resetting state
+        loadProgress();
+        showSection('habitInfo');
     });
+});
 
     // Start tracking button
     if (startTrackingButton) {
-        startTrackingButton.addEventListener('click', () => {
-            showSection('progressTracking');
-            updateProgress();
+startTrackingButton.addEventListener('click', () => {
+    showSection('progressTracking');
+    updateProgress();
         });
     }
 
@@ -528,7 +716,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showDailyTip();
             
             // Send success notification
-            sendNotification(
+            sendEnhancedNotification(
                 'أحسنت! 🎉',
                 `لقد أكملت ${streak} يوم من النجاح! واصل التقدم!`,
                 {
@@ -536,8 +724,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     requireInteraction: true
                 }
             );
-
-            setupStreakNotifications(); // Check for streak milestones
         });
     }
 
@@ -594,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             notifications = [];
             localStorage.setItem('notifications', JSON.stringify(notifications));
-            updateNotificationsUI();
+        updateNotificationsUI();
         });
     }
 
@@ -731,13 +917,13 @@ function updateProgress() {
 
     if (motivationElement) {
         const message = getMotivationalMessage(streak);
-        motivationElement.textContent = message;
+    motivationElement.textContent = message;
         
         // Add animation
-        motivationElement.style.animation = 'none';
-        motivationElement.offsetHeight; // Trigger reflow
-        motivationElement.style.animation = 'fadeIn 0.5s ease forwards';
-    }
+    motivationElement.style.animation = 'none';
+    motivationElement.offsetHeight; // Trigger reflow
+    motivationElement.style.animation = 'fadeIn 0.5s ease forwards';
+}
 
     // Show notification for milestones
     if (streak > 0 && streak % 5 === 0) {
@@ -775,7 +961,7 @@ function getMotivationalMessage(streak) {
         .pop() || messages[0];
 
     return message.message;
-}
+    }
 
 // Notification System
 function showNotification(title, message, options = {}) {
@@ -799,12 +985,12 @@ function showNotification(title, message, options = {}) {
             </div>
         </div>
     `;
-
+    
     notificationContainer.appendChild(notification);
-
+    
     // Add to notifications list
     addNotification(title, message, options.type || 'info');
-
+    
     // Auto remove after duration
     if (!options.persistent) {
         setTimeout(() => {
@@ -812,7 +998,7 @@ function showNotification(title, message, options = {}) {
             setTimeout(() => notification.remove(), 300);
         }, options.duration || 5000);
     }
-
+    
     return notification;
 }
 
@@ -943,7 +1129,7 @@ function checkLastSuccessTime() {
     }
 }
 
-// Initialize search functionality
+    // Initialize search functionality
 function initializeSearch() {
     const habitSearch = document.getElementById('habitSearch');
     const habitCards = document.querySelectorAll('.habit-card');
@@ -1085,103 +1271,12 @@ function initializeNotifications() {
                 e.stopPropagation();
                 notifications = [];
                 localStorage.setItem('notifications', JSON.stringify(notifications));
-                updateNotificationsUI();
+        updateNotificationsUI();
                 list.classList.remove('show');
                 showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
             };
         }
     }
-}
-
-// Update notifications UI with enhanced display
-function updateNotificationsUI() {
-    const notificationsCount = document.querySelector('.notifications-count');
-    const notificationsContent = document.querySelector('.notifications-content');
-    const notificationsToggle = document.querySelector('.notifications-toggle');
-    
-    if (!notificationsCount || !notificationsContent) return;
-
-    // Update count of unread notifications
-    const unreadCount = notifications.filter(n => !n.read).length;
-    notificationsCount.textContent = unreadCount;
-    
-    // Show/hide count badge
-    if (unreadCount > 0) {
-        notificationsCount.style.display = 'flex';
-        // Add pulse animation to notification icon
-        notificationsToggle.classList.add('has-notifications');
-    } else {
-        notificationsCount.style.display = 'none';
-        notificationsToggle.classList.remove('has-notifications');
-    }
-
-    // Update content
-    if (notifications.length === 0) {
-        notificationsContent.innerHTML = '<div class="no-notifications">لا توجد إشعارات</div>';
-        return;
-    }
-
-    notificationsContent.innerHTML = notifications.map(notification => `
-        <div class="notification-item ${notification.read ? 'read' : ''}" data-id="${notification.id}">
-            <div class="notification-icon">
-                <i class="${getNotificationIcon(notification.type)}"></i>
-            </div>
-            <div class="notification-content">
-                <div class="notification-header">
-                    <div class="notification-title">${notification.title}</div>
-                    ${!notification.read ? '<span class="unread-badge"></span>' : ''}
-                </div>
-                <div class="notification-message">${notification.message}</div>
-                <div class="notification-time" title="${new Date(notification.timestamp).toLocaleString('ar-EG')}">
-                    ${formatTimestamp(notification.timestamp)}
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-    // Add click listeners to notification items
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.onclick = function() {
-            const id = parseInt(item.dataset.id);
-            markNotificationAsRead(id);
-            updateNotificationsUI();
-        };
-    });
-}
-
-// Add notification with enhanced timestamp
-function addNotification(title, message, type = 'info') {
-    const notification = {
-        id: Date.now(),
-        title,
-        message,
-        type,
-        timestamp: new Date().toISOString(),
-        read: false
-    };
-
-    // Add to beginning of array
-    notifications.unshift(notification);
-
-    // Keep only the latest maxNotifications
-    if (notifications.length > maxNotifications) {
-        notifications = notifications.slice(0, maxNotifications);
-    }
-
-    // Save to localStorage
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-
-    // Update UI
-    updateNotificationsUI();
-
-    // Show notification badge animation
-    const toggle = document.querySelector('.notifications-toggle');
-    if (toggle) {
-        toggle.classList.add('notification-pulse');
-        setTimeout(() => toggle.classList.remove('notification-pulse'), 1000);
-    }
-
-    return notification;
 }
 
 // Mark notification as read
@@ -1232,8 +1327,8 @@ function formatTimestamp(timestamp) {
     if (diff < 604800000) {
         const days = Math.floor(diff / 86400000);
         return rtf.format(-days, 'day');
-    }
-    
+}
+
     // Format exact date and time
     const options = { 
         year: 'numeric', 
@@ -1249,7 +1344,7 @@ function formatTimestamp(timestamp) {
 async function requestPermissions() {
     try {
         if ('Notification' in window) {
-            const notificationPermission = await Notification.requestPermission();
+        const notificationPermission = await Notification.requestPermission();
             console.log('Notification permission:', notificationPermission);
         }
 
