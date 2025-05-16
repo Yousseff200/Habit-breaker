@@ -981,9 +981,43 @@ function showDailyTip() {
 
 // Notifications Management
 function initializeNotifications() {
+    // Get DOM elements
     const notificationsToggle = document.querySelector('.notifications-toggle');
     const notificationsList = document.querySelector('.notifications-list');
+    const notificationsCount = document.querySelector('.notifications-count');
+    const notificationsContent = document.querySelector('.notifications-content');
     const clearNotificationsBtn = document.querySelector('.clear-notifications');
+
+    // Create notifications list if it doesn't exist
+    if (!notificationsList) {
+        const notificationsMenu = document.createElement('div');
+        notificationsMenu.className = 'notifications-list';
+        notificationsMenu.innerHTML = `
+            <div class="notifications-header">
+                <h3>الإشعارات</h3>
+                <button class="clear-notifications">مسح الكل</button>
+            </div>
+            <div class="notifications-content"></div>
+        `;
+        document.body.appendChild(notificationsMenu);
+    }
+
+    // Create notifications toggle if it doesn't exist
+    if (!notificationsToggle) {
+        const toggle = document.createElement('button');
+        toggle.className = 'notifications-toggle';
+        toggle.innerHTML = '<i class="fas fa-bell"></i>';
+        const toggleContainer = document.createElement('div');
+        toggleContainer.className = 'notifications-menu';
+        toggleContainer.appendChild(toggle);
+        
+        // Add notifications count badge
+        const count = document.createElement('span');
+        count.className = 'notifications-count';
+        toggle.appendChild(count);
+        
+        document.body.appendChild(toggleContainer);
+    }
 
     // Load saved notifications
     notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
@@ -1000,72 +1034,45 @@ function initializeNotifications() {
     // Update notifications UI
     updateNotificationsUI();
 
-    // Add event listeners for notifications
-    if (notificationsToggle && notificationsList) {
-        notificationsToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notificationsList.classList.toggle('show');
-            if (notificationsList.classList.contains('show')) {
-                markAllAsRead();
-            }
-        });
+    // Add event listeners for notifications toggle
+    document.querySelector('.notifications-toggle').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelector('.notifications-list').classList.toggle('show');
+        if (document.querySelector('.notifications-list').classList.contains('show')) {
+            markAllAsRead();
+        }
+    });
 
-        // Close notifications on outside click
-        document.addEventListener('click', (e) => {
-            if (!notificationsList.contains(e.target) && !notificationsToggle.contains(e.target)) {
-                notificationsList.classList.remove('show');
-            }
-        });
-    }
+    // Close notifications on outside click
+    document.addEventListener('click', (e) => {
+        const list = document.querySelector('.notifications-list');
+        const toggle = document.querySelector('.notifications-toggle');
+        if (list && toggle && !list.contains(e.target) && !toggle.contains(e.target)) {
+            list.classList.remove('show');
+        }
+    });
 
     // Clear notifications button
-    if (clearNotificationsBtn) {
-        clearNotificationsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notifications = [];
-            localStorage.setItem('notifications', JSON.stringify(notifications));
-            updateNotificationsUI();
-            showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
-        });
-    }
-}
-
-// Add notification
-function addNotification(title, message, type = 'info') {
-    const notification = {
-        id: Date.now(),
-        title,
-        message,
-        type,
-        timestamp: new Date().toISOString(),
-        read: false
-    };
-
-    // Add to beginning of array
-    notifications.unshift(notification);
-
-    // Keep only the latest maxNotifications
-    if (notifications.length > maxNotifications) {
-        notifications = notifications.slice(0, maxNotifications);
-    }
-
-    // Save to localStorage
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-
-    // Update UI
-    updateNotificationsUI();
-
-    return notification;
+    document.querySelector('.clear-notifications').addEventListener('click', (e) => {
+        e.stopPropagation();
+        notifications = [];
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        updateNotificationsUI();
+        showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
+    });
 }
 
 // Update notifications UI
 function updateNotificationsUI() {
+    const notificationsCount = document.querySelector('.notifications-count');
+    const notificationsContent = document.querySelector('.notifications-content');
+    
     if (!notificationsCount || !notificationsContent) return;
 
     // Update count
     const unreadCount = notifications.filter(n => !n.read).length;
     notificationsCount.textContent = unreadCount;
-    notificationsCount.classList.toggle('show', unreadCount > 0);
+    notificationsCount.style.display = unreadCount > 0 ? 'flex' : 'none';
 
     // Update content
     if (notifications.length === 0) {
@@ -1076,7 +1083,7 @@ function updateNotificationsUI() {
     notificationsContent.innerHTML = notifications.map(notification => `
         <div class="notification-item ${notification.read ? 'read' : ''}" data-id="${notification.id}">
             <div class="notification-icon">
-                ${getNotificationIcon(notification.type)}
+                <i class="${getNotificationIcon(notification.type)}"></i>
             </div>
             <div class="notification-content">
                 <div class="notification-title">${notification.title}</div>
@@ -1093,6 +1100,33 @@ function updateNotificationsUI() {
             markNotificationAsRead(id);
         });
     });
+}
+
+// Add notification
+function addNotification(title, message, type = 'info') {
+    const notification = {
+        id: Date.now(),
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+
+    notifications.unshift(notification);
+
+    // Keep only the latest maxNotifications
+    if (notifications.length > maxNotifications) {
+        notifications = notifications.slice(0, maxNotifications);
+    }
+
+    // Save to localStorage
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+
+    // Update UI
+    updateNotificationsUI();
+
+    return notification;
 }
 
 // Mark single notification as read
