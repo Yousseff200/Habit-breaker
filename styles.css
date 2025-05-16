@@ -208,7 +208,7 @@ footer {
 .toast {
   position: fixed;
   top: 2.5rem;
-  right: 2rem;
+  right: -400px;
   background: var(--card-bg);
   color: var(--main-color);
   border: 1px solid var(--accent);
@@ -219,6 +219,14 @@ footer {
   z-index: 9999;
   display: none;
   transition: opacity 0.3s;
+  opacity: 0;
+}
+@media (max-width: 600px) {
+  .toast {
+    right: -100vw;
+    left: auto;
+    top: 1.5rem;
+  }
 }
 .toast.success {
   border-color: var(--success);
