@@ -248,28 +248,139 @@ let bestStreak = 0;
 function setTheme(isDark) {
     if (isDark) {
         document.body.classList.add('dark-mode');
-        themeToggle.querySelector('i').classList.remove('fa-moon');
-        themeToggle.querySelector('i').classList.add('fa-sun');
+        document.body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        if (themeToggle) {
+            themeToggle.querySelector('i').classList.remove('fa-moon');
+            themeToggle.querySelector('i').classList.add('fa-sun');
+        }
     } else {
         document.body.classList.remove('dark-mode');
-        themeToggle.querySelector('i').classList.remove('fa-sun');
-        themeToggle.querySelector('i').classList.add('fa-moon');
+        document.body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        if (themeToggle) {
+            themeToggle.querySelector('i').classList.remove('fa-sun');
+            themeToggle.querySelector('i').classList.add('fa-moon');
+        }
     }
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
 
 function loadTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        setTheme(true);
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme === 'dark');
+}
+
+// Enhanced Notification System
+function setupNotificationSystem() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                setupDailyReminders();
+                setupStreakNotifications();
+            }
+        });
     }
 }
 
-// Theme Toggle
-themeToggle.addEventListener('click', () => {
-    const isDark = !document.body.classList.contains('dark-mode');
-    setTheme(isDark);
-});
+function setupDailyReminders() {
+    // Check every hour if the user hasn't logged their progress
+    setInterval(checkAndSendReminder, 1000 * 60 * 60); // Check every hour
+    checkAndSendReminder(); // Check immediately
+}
+
+function checkAndSendReminder() {
+    if (!currentHabit) return;
+
+    const now = new Date();
+    const lastSuccess = lastSuccessDate ? new Date(lastSuccessDate) : null;
+    
+    // If no success today and it's after 8 PM
+    if ((!lastSuccess || !isSameDay(lastSuccess, now)) && now.getHours() >= 20) {
+        sendNotification(
+            'تذكير يومي 🌟',
+            'لم تسجل التزامك اليوم بعد. لا تفوت فرصة تحسين عاداتك!',
+            {
+                tag: 'daily-reminder',
+                requireInteraction: true,
+                actions: [
+                    {
+                        action: 'open',
+                        title: 'تسجيل الآن'
+                    }
+                ]
+            }
+        );
+    }
+}
+
+function setupStreakNotifications() {
+    // Send motivational notifications based on streak milestones
+    if (streak > 0 && streak % 7 === 0) { // Weekly milestone
+        sendNotification(
+            'إنجاز أسبوعي رائع! 🎉',
+            `أكملت ${streak} أيام متتالية! أنت تصنع التغيير الحقيقي.`,
+            {
+                tag: 'streak-milestone',
+                requireInteraction: true
+            }
+        );
+    }
+}
+
+function sendNotification(title, message, options = {}) {
+    // First try to send a system notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+            body: message,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/badge.png',
+            dir: 'rtl',
+            lang: 'ar',
+            ...options
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+            // If there's a specific action to perform
+            if (options.onClick) {
+                options.onClick();
+            }
+        };
+    }
+
+    // Also show in-app notification
+    showInAppNotification(title, message, options);
+}
+
+function showInAppNotification(title, message, options = {}) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${options.type || ''}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <strong>${title}</strong>
+            <p>${message}</p>
+        </div>
+    `;
+
+    const container = document.getElementById('notificationContainer');
+    if (container) {
+        container.appendChild(notification);
+        
+        if (!options.persistent) {
+            setTimeout(() => {
+                notification.classList.add('notification-exit');
+                setTimeout(() => notification.remove(), 300);
+            }, options.duration || 5000);
+        }
+    }
+}
+
+function isSameDay(date1, date2) {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+}
 
 // Navigation
 const navLinks = document.querySelectorAll('.nav-link');
@@ -329,11 +440,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize theme
     loadTheme();
 
-    // Theme Toggle
-    themeToggle.addEventListener('click', () => {
-        const isDark = !document.body.classList.contains('dark-mode');
-        setTheme(isDark);
-    });
+    // Theme Toggle with fixed functionality
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark-mode');
+            setTheme(isDark);
+        });
+    }
 
     // Navigation
     navLinks.forEach(link => {
@@ -390,15 +503,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Success button
+    // Success button with enhanced notifications
     if (successButton) {
         successButton.addEventListener('click', () => {
             const today = new Date();
             
             if (lastSuccessDate && streak > 0) {
                 const lastDate = new Date(lastSuccessDate);
-                if (today.toDateString() === lastDate.toDateString()) {
-                    showMotivationMessage('لقد سجلت نجاحك لهذا اليوم بالفعل. عد غداً!');
+                if (isSameDay(today, lastDate)) {
+                    showInAppNotification(
+                        'تنبيه',
+                        'لقد سجلت نجاحك لهذا اليوم بالفعل. عد غداً!',
+                        { type: 'info' }
+                    );
                     return;
                 }
             }
@@ -409,22 +526,17 @@ document.addEventListener('DOMContentLoaded', function() {
             updateProgress();
             showDailyTip();
             
-            let message;
-            if (streak === 1) {
-                message = 'أحسنت! لقد بدأت رحلة التغيير. كل رحلة تبدأ بخطوة واحدة! 🌱';
-            } else {
-                const messages = [
-                    'أحسنت! أنت تقترب من هدفك كل يوم! 🎯',
-                    'رائع! استمر في التقدم! ⭐️',
-                    'كل يوم نجاح هو خطوة نحو حياة أفضل! 🌟',
-                    'أنت تصنع التغيير! واصل التقدم! 💪',
-                    'نفتخر بك! أنت قدوة للآخرين! ✨'
-                ];
-                message = messages[Math.floor(Math.random() * messages.length)];
-            }
-            
-            showMotivationMessage(message);
-            addNotification('تم تسجيل النجاح! 🎉', message, 'success');
+            // Send success notification
+            sendNotification(
+                'أحسنت! 🎉',
+                `لقد أكملت ${streak} يوم من النجاح! واصل التقدم!`,
+                {
+                    type: 'success',
+                    requireInteraction: true
+                }
+            );
+
+            setupStreakNotifications(); // Check for streak milestones
         });
     }
 
@@ -500,6 +612,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (currentHabit) {
         checkLastSuccessTime();
     }
+
+    // Setup enhanced notification system
+    setupNotificationSystem();
 });
 
 // Habit Info Update
