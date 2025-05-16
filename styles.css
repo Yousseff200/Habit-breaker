@@ -303,46 +303,42 @@ footer {
     transform: translateY(0);
   }
 }
+/* تحسين استجابة الهيدر والقوائم للهواتف */
+header nav ul {
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
 @media (max-width: 600px) {
-  .hero {
-    margin: 2rem 0 1rem 0;
+  header nav ul {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
   }
-  header h1 {
-    font-size: 1.3rem;
+  header {
+    padding: 0.5rem 0;
+  }
+  .hero {
+    margin: 1.2rem 0 0.7rem 0;
   }
   .hero h2 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+  }
+  .hero p {
+    font-size: 0.95rem;
   }
   #startBtn {
+    font-size: 0.95rem;
+    padding: 0.6rem 1.2rem;
+  }
+  main {
+    padding: 0 0.2rem;
+  }
+}
+@media (max-width: 400px) {
+  header h1 {
     font-size: 1rem;
-    padding: 0.7rem 1.5rem;
   }
-  nav ul {
-    gap: 0.7rem;
-  }
-  .habits-list {
-    gap: 0.7rem;
-  }
-  .habit-card {
-    padding: 0.7rem 0.5rem;
-    width: 98vw;
-  }
-  #searchInput {
-    font-size: 1rem;
-    padding: 0.5rem 0.7rem;
-  }
-  .stats-section {
-    padding: 1rem 0.3rem;
-  }
-  .stat-card {
-    padding: 0.7rem 0.5rem;
-    width: 98vw;
-  }
-  .about-section, .privacy-section {
-    padding: 1rem 0.3rem;
-  }
-  .about-list, .privacy-list {
-    font-size: 1rem;
-    padding-right: 0.5rem;
+  .hero h2 {
+    font-size: 0.9rem;
   }
 }
