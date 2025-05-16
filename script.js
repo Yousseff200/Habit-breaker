@@ -1010,26 +1010,109 @@ async function registerServiceWorker() {
 
 // Initialize Push Notifications
 async function initializePushNotifications(registration) {
-    const permission = await Notification.requestPermission();
-    
-    if (permission === 'granted') {
-        // Store the permission status
-        localStorage.setItem('notificationsEnabled', 'true');
+    try {
+        const permission = await Notification.requestPermission();
         
-        // Subscribe to push notifications
-        try {
-            const subscribeOptions = {
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array('YOUR_PUBLIC_VAPID_KEY') // You'll need to replace this with your VAPID key
-            };
+        if (permission === 'granted') {
+            // Store the permission status
+            localStorage.setItem('notificationsEnabled', 'true');
             
-            const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
-            // Here you would typically send the pushSubscription to your server
-            console.log('تم تفعيل الإشعارات بنجاح');
-        } catch (error) {
-            console.error('فشل الاشتراك في الإشعارات:', error);
+            // Register for periodic background sync if supported
+            if ('periodicSync' in registration) {
+                try {
+                    // Request permission for background sync
+                    const status = await navigator.permissions.query({
+                        name: 'periodic-background-sync',
+                    });
+
+                    if (status.state === 'granted') {
+                        // Register periodic sync - check every 1 hour
+                        await registration.periodicSync.register('check-habit-progress', {
+                            minInterval: 60 * 60 * 1000, // 1 hour in milliseconds
+                        });
+                    }
+                } catch (error) {
+                    console.log('Periodic background sync not supported');
+                }
+            }
+
+            // Subscribe to push notifications
+            try {
+                const subscribeOptions = {
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array('YOUR_PUBLIC_VAPID_KEY')
+                };
+                
+                const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
+                console.log('تم تفعيل الإشعارات بنجاح');
+
+                // Schedule initial notifications
+                scheduleNotifications(registration);
+            } catch (error) {
+                console.error('فشل الاشتراك في الإشعارات:', error);
+            }
         }
+    } catch (error) {
+        console.error('حدث خطأ أثناء طلب إذن الإشعارات:', error);
     }
+}
+
+// Schedule notifications for morning and evening
+async function scheduleNotifications(registration) {
+    // Schedule morning notification (9 AM)
+    scheduleDailyNotification(registration, 9, 0, {
+        title: 'محطم العادات السيئة',
+        body: 'صباح الخير! لا تنس تسجيل تقدمك اليوم 🌟',
+        tag: 'morning-reminder'
+    });
+
+    // Schedule evening notification (8 PM)
+    scheduleDailyNotification(registration, 20, 0, {
+        title: 'محطم العادات السيئة',
+        body: 'مساء الخير! هل سجلت تقدمك اليوم؟ 🌙',
+        tag: 'evening-reminder'
+    });
+}
+
+// Schedule a daily notification at specific hour and minute
+function scheduleDailyNotification(registration, hour, minute, options) {
+    const now = new Date();
+    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
+    
+    // If the time has passed today, schedule for tomorrow
+    if (now > scheduledTime) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+    
+    const timeUntilNotification = scheduledTime - now;
+    
+    setTimeout(async () => {
+        try {
+            await registration.showNotification(options.title, {
+                body: options.body,
+                icon: '/icon.png',
+                badge: '/badge.png',
+                tag: options.tag,
+                dir: 'rtl',
+                lang: 'ar',
+                requireInteraction: true,
+                actions: [
+                    {
+                        action: 'open',
+                        title: 'فتح التطبيق'
+                    },
+                    {
+                        action: 'close',
+                        title: 'إغلاق'
+                    }
+                ]
+            });
+            // Schedule next notification for tomorrow
+            scheduleDailyNotification(registration, hour, minute, options);
+        } catch (error) {
+            console.error('فشل إرسال الإشعار:', error);
+        }
+    }, timeUntilNotification);
 }
 
 // Helper function to convert VAPID key
