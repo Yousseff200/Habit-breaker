@@ -1013,37 +1013,28 @@ function showDailyTip() {
 
 // Notifications Management
 function initializeNotifications() {
-    // Create notifications container if it doesn't exist
-    let notificationsMenu = document.querySelector('.notifications-menu');
-    if (!notificationsMenu) {
-        notificationsMenu = document.createElement('div');
-        notificationsMenu.className = 'notifications-menu';
-        document.body.appendChild(notificationsMenu);
-
-        const toggle = document.createElement('button');
-        toggle.className = 'notifications-toggle';
-        toggle.innerHTML = '<i class="fas fa-bell"></i>';
-        
-        const count = document.createElement('span');
-        count.className = 'notifications-count';
-        toggle.appendChild(count);
-        
-        notificationsMenu.appendChild(toggle);
-    }
-
-    // Create notifications list if it doesn't exist
-    let notificationsList = document.querySelector('.notifications-list');
-    if (!notificationsList) {
-        notificationsList = document.createElement('div');
-        notificationsList.className = 'notifications-list';
-        notificationsList.innerHTML = `
+    // First, create the notifications HTML structure
+    const notificationsHTML = `
+        <div class="notifications-menu">
+            <button class="notifications-toggle">
+                <i class="fas fa-bell"></i>
+                <span class="notifications-count">0</span>
+            </button>
+        </div>
+        <div class="notifications-list">
             <div class="notifications-header">
                 <h3>الإشعارات</h3>
                 <button class="clear-notifications">مسح الكل</button>
             </div>
             <div class="notifications-content"></div>
-        `;
-        document.body.appendChild(notificationsList);
+        </div>
+    `;
+
+    // Add the notifications HTML to the body if it doesn't exist
+    if (!document.querySelector('.notifications-menu')) {
+        const container = document.createElement('div');
+        container.innerHTML = notificationsHTML;
+        document.body.appendChild(container);
     }
 
     // Load saved notifications
@@ -1061,37 +1052,44 @@ function initializeNotifications() {
     // Update notifications UI
     updateNotificationsUI();
 
-    // Add event listeners
+    // Add click event to notifications toggle
     const toggle = document.querySelector('.notifications-toggle');
     const list = document.querySelector('.notifications-list');
-    const clearBtn = document.querySelector('.clear-notifications');
 
-    if (toggle) {
-        toggle.addEventListener('click', (e) => {
+    if (toggle && list) {
+        // Remove any existing event listeners
+        const newToggle = toggle.cloneNode(true);
+        toggle.parentNode.replaceChild(newToggle, toggle);
+
+        // Add new click event listener
+        newToggle.onclick = function(e) {
             e.stopPropagation();
             list.classList.toggle('show');
             if (list.classList.contains('show')) {
                 markAllAsRead();
+                updateNotificationsUI();
+            }
+        };
+
+        // Close notifications when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!list.contains(e.target) && !newToggle.contains(e.target)) {
+                list.classList.remove('show');
             }
         });
-    }
 
-    // Close notifications on outside click
-    document.addEventListener('click', (e) => {
-        if (list && !list.contains(e.target) && !toggle.contains(e.target)) {
-            list.classList.remove('show');
+        // Clear notifications button
+        const clearBtn = document.querySelector('.clear-notifications');
+        if (clearBtn) {
+            clearBtn.onclick = function(e) {
+                e.stopPropagation();
+                notifications = [];
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+                updateNotificationsUI();
+                list.classList.remove('show');
+                showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
+            };
         }
-    });
-
-    // Clear notifications button
-    if (clearBtn) {
-        clearBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notifications = [];
-            localStorage.setItem('notifications', JSON.stringify(notifications));
-            updateNotificationsUI();
-            showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
-        });
     }
 }
 
@@ -1128,10 +1126,11 @@ function updateNotificationsUI() {
 
     // Add click listeners to notification items
     document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', () => {
+        item.onclick = function() {
             const id = parseInt(item.dataset.id);
             markNotificationAsRead(id);
-        });
+            updateNotificationsUI();
+        };
     });
 }
 
