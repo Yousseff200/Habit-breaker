@@ -92,50 +92,69 @@ async function checkAndSendNotification() {
     }
 }
 
-// Cache the app shell for offline functionality
-const CACHE_NAME = 'habit-crusher-v2';
-const urlsToCache = [
+// Cache name
+const CACHE_NAME = 'habit-crusher-v1';
+
+// Resources to cache
+const RESOURCES_TO_CACHE = [
     '/',
     '/index.html',
     '/styles.css',
     '/script.js',
-    '/icon.png',
-    '/badge.png'
+    '/manifest.json',
+    '/icons/icon-72x72.png',
+    '/icons/icon-96x96.png',
+    '/icons/icon-128x128.png',
+    '/icons/icon-144x144.png',
+    '/icons/icon-152x152.png',
+    '/icons/icon-192x192.png',
+    '/icons/icon-384x384.png',
+    '/icons/icon-512x512.png'
 ];
 
-self.addEventListener('install', function(event) {
+// Install event - cache resources
+self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(function(cache) {
-                return cache.addAll(urlsToCache);
+            .then(cache => cache.addAll(RESOURCES_TO_CACHE))
+            .then(() => self.skipWaiting())
+    );
+});
+
+// Activate event - clean old caches
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        Promise.all([
+            // Clean old caches
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames
+                        .filter(cacheName => cacheName !== CACHE_NAME)
+                        .map(cacheName => caches.delete(cacheName))
+                );
+            }),
+            // Take control of all pages immediately
+            self.clients.claim()
+        ])
+    );
+});
+
+// Fetch event - serve from cache or network
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => response || fetch(event.request))
+            .catch(() => {
+                // Return offline page if network request fails
+                if (event.request.mode === 'navigate') {
+                    return caches.match('/');
+                }
             })
     );
 });
 
-self.addEventListener('activate', function(event) {
-    event.waitUntil(
-        caches.keys().then(function(cacheNames) {
-            return Promise.all(
-                cacheNames.filter(function(cacheName) {
-                    return cacheName.startsWith('habit-crusher-') && cacheName !== 'habit-crusher-v2';
-                }).map(function(cacheName) {
-                    return caches.delete(cacheName);
-                })
-            );
-        })
-    );
-});
-
-self.addEventListener('fetch', function(event) {
-    event.respondWith(
-        caches.match(event.request).then(function(response) {
-            return response || fetch(event.request);
-        })
-    );
-});
-
 // Handle notification clicks
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
     // Handle different actions
@@ -145,7 +164,7 @@ self.addEventListener('notificationclick', function(event) {
             clients.matchAll({
                 type: 'window',
                 includeUncontrolled: true
-            }).then(function(clientList) {
+            }).then(clientList => {
                 for (let i = 0; i < clientList.length; i++) {
                     const client = clientList[i];
                     if (client.url.includes(self.registration.scope) && 'focus' in client) {
@@ -154,11 +173,6 @@ self.addEventListener('notificationclick', function(event) {
                 }
                 return clients.openWindow(self.registration.scope);
             })
-        );
-    } else if (event.action === 'share') {
-        // Open the sharing interface
-        event.waitUntil(
-            clients.openWindow(`${self.registration.scope}#share`)
         );
     }
 });
