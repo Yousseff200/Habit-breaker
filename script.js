@@ -293,29 +293,16 @@ const notificationConfig = {
 
 // Enhanced notification system with realtime support
 function sendEnhancedNotification(title, message, options = {}) {
-    const {
-        category = notificationConfig.categories.SYSTEM,
-        priority = notificationConfig.priorities.MEDIUM,
-        duration = notificationConfig.defaultDuration,
-        actions = [],
-        icon = getNotificationIcon(category),
-        persistent = false,
-        sound = true,
-        data = {},
-        realtime = true // New option for realtime notifications
-    } = options;
-
-    // Create notification object
     const notification = {
         id: Date.now(),
         title,
         message,
-        category,
-        priority,
+        category: options.category || notificationConfig.categories.SYSTEM,
+        priority: options.priority || notificationConfig.priorities.MEDIUM,
         timestamp: new Date().toISOString(),
         read: false,
-        data,
-        actions
+        data: options.data || {},
+        actions: options.actions || []
     };
 
     // Add to notifications array
@@ -330,26 +317,15 @@ function sendEnhancedNotification(title, message, options = {}) {
     localStorage.setItem('notifications', JSON.stringify(notifications));
 
     // Show in-app notification
-    showInAppNotification(title, message, {
-        type: category,
-        duration: persistent ? null : duration,
-        actions,
-        icon
+    showNotification(title, message, {
+        type: notification.category,
+        duration: options.persistent ? null : options.duration || notificationConfig.defaultDuration,
+        persistent: options.persistent,
+        actions: notification.actions
     });
 
-    // Play notification sound if enabled
-    if (sound && notificationConfig.soundEnabled) {
-        playNotificationSound(priority);
-    }
-
-    // Send via WebSocket if realtime is enabled
-    if (realtime) {
-        notificationSocket.send('notification', {
-            ...notification,
-            requireInteraction: persistent,
-            sound: notificationConfig.soundEnabled
-        });
-    }
+    // Send via WebSocket for realtime updates
+    sendNotificationToServer('notification', notification);
 
     // Update UI
     updateNotificationsUI();
@@ -767,13 +743,7 @@ startTrackingButton.addEventListener('click', () => {
     if (clearNotificationsBtn) {
         clearNotificationsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            notifications = [];
-            localStorage.setItem('notifications', JSON.stringify(notifications));
-            updateNotificationsUI();
-            // Close notifications panel
-            if (notificationsList) {
-                notificationsList.classList.remove('show');
-            }
+            clearAllNotifications();
         });
     }
 
@@ -959,18 +929,13 @@ function getMotivationalMessage(streak) {
     return message.message;
     }
 
-// Notification System
+// Show notification
 function showNotification(title, message, options = {}) {
-    const notificationContainer = document.getElementById('notificationContainer');
-    if (!notificationContainer) {
-        const container = document.createElement('div');
-        container.id = 'notificationContainer';
-        container.className = 'notification-container';
-        document.body.appendChild(container);
-    }
-
+    const notificationContainer = document.getElementById('notificationContainer') || createNotificationContainer();
+    
     const notification = document.createElement('div');
     notification.className = `notification ${options.type || ''}`;
+    notification.setAttribute('data-notification-id', Date.now());
     
     notification.innerHTML = `
         <div class="notification-content">
@@ -979,248 +944,85 @@ function showNotification(title, message, options = {}) {
                 <strong>${title}</strong>
                 <p>${message}</p>
             </div>
+            <button class="notification-close" aria-label="إغلاق">×</button>
         </div>
     `;
     
     notificationContainer.appendChild(notification);
     
-    // Add to notifications list
-    addNotification(title, message, options.type || 'info');
+    // Add close button functionality
+    const closeButton = notification.querySelector('.notification-close');
+    closeButton.addEventListener('click', () => {
+        removeNotification(notification);
+    });
     
-    // Auto remove after duration
+    // Auto remove after duration unless persistent
     if (!options.persistent) {
         setTimeout(() => {
-            notification.classList.add('notification-exit');
-            setTimeout(() => notification.remove(), 300);
+            removeNotification(notification);
         }, options.duration || 5000);
     }
     
     return notification;
 }
 
-// Get notification icon
-function getNotificationIcon(type) {
-    const icons = {
-        success: 'fas fa-check-circle',
-        warning: 'fas fa-exclamation-triangle',
-        info: 'fas fa-info-circle',
-        welcome: 'fas fa-hand-paper',
-        achievement: 'fas fa-trophy',
-        reminder: 'fas fa-bell'
-    };
-    return icons[type] || icons.info;
-}
-
-// Check Last Success Time and Show Notification
-function checkLastSuccessTime() {
-    if (!lastSuccessDate) return;
-    
-    const now = new Date();
-    const lastDate = new Date(lastSuccessDate);
-    const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays >= 1) {
-        const habit = habitsData[currentHabit];
-        
-        // Get time of day for personalized message
-        const hour = now.getHours();
-        let timeBasedGreeting = '';
-        if (hour >= 5 && hour < 12) {
-            timeBasedGreeting = 'صباح الخير! ';
-        } else if (hour >= 12 && hour < 17) {
-            timeBasedGreeting = 'مساء الخير! ';
-        } else if (hour >= 17 && hour < 22) {
-            timeBasedGreeting = 'مساء سعيد! ';
-        } else {
-            timeBasedGreeting = 'تصبح على خير! ';
-        }
-
-        // Different messages based on number of missed days
-        let motivationalMessage = '';
-        let title = '';
-        let icon = '';
-
-        if (diffDays === 1) {
-            title = 'لم تسجل التزامك بالأمس 💭';
-            motivationalMessage = `لا تدع يوماً واحداً يوقف تقدمك! عد إلى المسار الصحيح اليوم.`;
-            icon = 'fas fa-history';
-        } else if (diffDays === 2) {
-            title = 'يومان بدون تسجيل 🤔';
-            motivationalMessage = `تذكر لماذا بدأت! قوتك في عودتك. سجل التزامك اليوم وواصل التقدم.`;
-            icon = 'fas fa-route';
-        } else if (diffDays <= 4) {
-            title = 'نفتقد وجودك! 💫';
-            motivationalMessage = `${diffDays} أيام مرت. لا تترك العادة القديمة تسيطر عليك. أنت أقوى من ذلك!`;
-            icon = 'fas fa-star';
-        } else if (diffDays <= 7) {
-            title = 'لا تستسلم! 💪';
-            motivationalMessage = `أسبوع تقريباً مر. تذكر كل تقدم حققته. يمكنك العودة أقوى!`;
-            icon = 'fas fa-fist-raised';
-        } else {
-            title = 'نحن نؤمن بك! ✨';
-            motivationalMessage = `مر ${diffDays} يوم، لكن لا يزال الوقت مناسباً للعودة. كل يوم هو فرصة جديدة!`;
-            icon = 'fas fa-sun';
-        }
-
-        // Add daily tip to the message
-        const tips = dailyTips[currentHabit];
-        const randomTip = tips[Math.floor(Math.random() * tips.length)];
-        
-        // Show in-app notification
-        showNotification(
-            `${timeBasedGreeting}${title}`,
-            `${motivationalMessage}\n\nنصيحة اليوم: ${randomTip}`,
-            {
-                type: 'reminder',
-                icon: icon,
-                duration: 10000,
-                persistent: true,
-                actions: [
-                    {
-                        id: 'record-success',
-                        text: 'تسجيل النجاح',
-                        handler: () => {
-                            successButton.click();
-                        },
-                        closeOnClick: true
-                    },
-                    {
-                        id: 'remind-later',
-                        text: 'تذكيري بعد ساعة',
-                        handler: () => {
-                            setTimeout(checkLastSuccessTime, 1000 * 60 * 60);
-                        },
-                        closeOnClick: true
-                    }
-                ]
+// Remove notification with animation
+function removeNotification(notification) {
+    if (notification && notification.parentElement) {
+        notification.classList.add('notification-exit');
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
             }
-        );
-
-        // Send Push Notification if enabled
-        if (Notification.permission === 'granted') {
-            schedulePushNotification(
-                `${timeBasedGreeting}${title}`,
-                `${motivationalMessage}\n\nنصيحة اليوم: ${randomTip}`,
-                {
-                    tag: 'habit-reminder', // Prevents duplicate notifications
-                    renotify: true, // Allows the same notification to notify again
-                    requireInteraction: true, // Notification stays until user interacts
-                    actions: [
-                        {
-                            action: 'open',
-                            title: 'فتح التطبيق'
-                        }
-                    ]
-                }
-            );
-        }
-
-        // Schedule next reminder for tomorrow
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM tomorrow
-        const timeUntilTomorrow = tomorrow - now;
-        
-        setTimeout(checkLastSuccessTime, timeUntilTomorrow);
+        }, 300);
     }
 }
 
-    // Initialize search functionality
-function initializeSearch() {
-    const habitSearch = document.getElementById('habitSearch');
-    const habitCards = document.querySelectorAll('.habit-card');
-    const noResults = document.getElementById('noResults');
+// Create notification container
+function createNotificationContainer() {
+    const container = document.createElement('div');
+    container.id = 'notificationContainer';
+    container.className = 'notification-container';
+    document.body.appendChild(container);
+    return container;
+}
 
-    console.log('Search Elements:', {
-        searchInput: habitSearch,
-        cards: habitCards.length,
-        noResults: noResults
-    });
-
-    if (habitSearch) {
-        // Add input event listener
-        habitSearch.addEventListener('input', function() {
-            const searchTerm = this.value.trim().toLowerCase();
-            console.log('Searching for:', searchTerm);
-            
-            let hasResults = false;
-
-            habitCards.forEach(card => {
-                const title = card.querySelector('h3').textContent.toLowerCase();
-                const description = card.querySelector('p').textContent.toLowerCase();
-                const matches = title.includes(searchTerm) || description.includes(searchTerm);
-
-                card.style.display = matches ? 'block' : 'none';
-                if (matches) hasResults = true;
-            });
-
-            if (noResults) {
-                noResults.style.display = hasResults ? 'none' : 'block';
-            }
-        });
-
-        // Add click listeners to nav links for clearing search
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                habitSearch.value = '';
-                habitCards.forEach(card => {
-                    card.style.display = 'block';
-                });
-                if (noResults) {
-                    noResults.style.display = 'none';
-                }
-            });
+// Clear all notifications with animation
+function clearAllNotifications() {
+    // Clear stored notifications
+    notifications = [];
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    
+    // Update notifications list UI
+    updateNotificationsUI();
+    
+    // Close notifications panel
+    const notificationsList = document.querySelector('.notifications-list');
+    if (notificationsList) {
+        notificationsList.classList.remove('show');
+    }
+    
+    // Remove visible notification toasts with animation
+    const container = document.getElementById('notificationContainer');
+    if (container) {
+        const toasts = Array.from(container.querySelectorAll('.notification'));
+        toasts.forEach((toast, index) => {
+            // Stagger the removal animation
+            setTimeout(() => {
+                removeNotification(toast);
+            }, index * 100);
         });
     }
 }
 
-// Daily Tip Functions
-function showDailyTip() {
-    if (!currentHabit) return;
-    
-    const tips = dailyTips[currentHabit];
-    const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-    const tipIndex = dayOfYear % tips.length;
-    const tip = tips[tipIndex];
-    
-    const dailyTipElement = document.getElementById('dailyTip');
-    if (dailyTipElement) {
-        dailyTipElement.innerHTML = `
-            <i class="fas fa-lightbulb"></i>
-            <p>${tip}</p>
-        `;
-    }
-}
-
-// Notifications Management
+// Initialize notifications system
 function initializeNotifications() {
-    // First, create the notifications HTML structure
-    const notificationsHTML = `
-        <div class="notifications-menu">
-            <button class="notifications-toggle">
-                <i class="fas fa-bell"></i>
-                <span class="notifications-count">0</span>
-            </button>
-        </div>
-        <div class="notifications-list">
-            <div class="notifications-header">
-                <h3>الإشعارات</h3>
-                <button class="clear-notifications">مسح الكل</button>
-            </div>
-            <div class="notifications-content"></div>
-        </div>
-    `;
-
-    // Add the notifications HTML to the body if it doesn't exist
-    if (!document.querySelector('.notifications-menu')) {
-        const container = document.createElement('div');
-        container.innerHTML = notificationsHTML;
-        document.body.appendChild(container);
-    }
-
-    // Load saved notifications
+    // Load saved notifications from localStorage
     notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    
+    const notificationsToggle = document.querySelector('.notifications-toggle');
+    const notificationsList = document.querySelector('.notifications-list');
+    const clearNotificationsBtn = document.querySelector('.clear-notifications');
 
     // Add welcome notification if no notifications exist
     if (notifications.length === 0) {
@@ -1235,64 +1037,149 @@ function initializeNotifications() {
     updateNotificationsUI();
 
     // Add click event to notifications toggle
-    const toggle = document.querySelector('.notifications-toggle');
-    const list = document.querySelector('.notifications-list');
-
-    if (toggle && list) {
-        // Remove any existing event listeners
-        const newToggle = toggle.cloneNode(true);
-        toggle.parentNode.replaceChild(newToggle, toggle);
-
-        // Add new click event listener
-        newToggle.onclick = function(e) {
+    if (notificationsToggle && notificationsList) {
+        notificationsToggle.addEventListener('click', (e) => {
             e.stopPropagation();
-            list.classList.toggle('show');
-            if (list.classList.contains('show')) {
+            notificationsList.classList.toggle('show');
+            if (notificationsList.classList.contains('show')) {
                 markAllAsRead();
             }
-        };
-
-        // Close notifications when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!list.contains(e.target) && !newToggle.contains(e.target)) {
-                list.classList.remove('show');
-            }
         });
-
-        // Clear notifications button
-        const clearBtn = document.querySelector('.clear-notifications');
-        if (clearBtn) {
-            clearBtn.onclick = function(e) {
-                e.stopPropagation();
-                notifications = [];
-                localStorage.setItem('notifications', JSON.stringify(notifications));
-        updateNotificationsUI();
-                list.classList.remove('show');
-                showNotification('تم المسح', 'تم مسح جميع الإشعارات', { type: 'info' });
-            };
-        }
     }
+
+    // Clear notifications button
+    if (clearNotificationsBtn) {
+        clearNotificationsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearAllNotifications();
+        });
+    }
+
+    // Close notifications on outside click
+    document.addEventListener('click', (e) => {
+        if (notificationsList && !notificationsList.contains(e.target) && !notificationsToggle.contains(e.target)) {
+            notificationsList.classList.remove('show');
+        }
+    });
+}
+
+// Add notification
+function addNotification(title, message, type = 'info', options = {}) {
+    const notification = {
+        id: Date.now(),
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false,
+        ...options
+    };
+
+    // Add to beginning of notifications array
+    notifications.unshift(notification);
+
+    // Trim notifications if exceeds max
+    if (notifications.length > notificationConfig.maxNotifications) {
+        notifications = notifications.slice(0, notificationConfig.maxNotifications);
+    }
+
+    // Save to localStorage
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+
+    // Show notification toast
+    showNotification(title, message, { type, ...options });
+
+    // Update notifications list UI
+    updateNotificationsUI();
+
+    return notification;
 }
 
 // Mark notification as read
 function markNotificationAsRead(id) {
-    const notificationIndex = notifications.findIndex(n => n.id === id);
-    if (notificationIndex !== -1) {
-        notifications[notificationIndex].read = true;
-        // Save immediately to localStorage
+    const index = notifications.findIndex(n => n.id === id);
+    if (index !== -1) {
+        notifications[index].read = true;
         localStorage.setItem('notifications', JSON.stringify(notifications));
-        // Update UI
         updateNotificationsUI();
     }
 }
 
 // Mark all notifications as read
 function markAllAsRead() {
-    notifications = notifications.map(n => ({ ...n, read: true }));
-    // Save immediately to localStorage
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-    // Update UI
-    updateNotificationsUI();
+    if (notifications.length > 0) {
+        notifications = notifications.map(n => ({ ...n, read: true }));
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        updateNotificationsUI();
+    }
+}
+
+// Update notifications UI
+function updateNotificationsUI() {
+    const notificationsCount = document.querySelector('.notifications-count');
+    const notificationsContent = document.querySelector('.notifications-content');
+    const notificationsToggle = document.querySelector('.notifications-toggle');
+    
+    if (!notificationsCount || !notificationsContent) return;
+
+    // Get fresh notifications from localStorage
+    notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+
+    // Update unread count
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationsCount.textContent = unreadCount;
+    
+    // Show/hide count badge
+    if (unreadCount > 0) {
+        notificationsCount.style.display = 'flex';
+        notificationsToggle.classList.add('has-notifications');
+    } else {
+        notificationsCount.style.display = 'none';
+        notificationsToggle.classList.remove('has-notifications');
+    }
+
+    // Update notifications list content
+    if (notifications.length === 0) {
+        notificationsContent.innerHTML = '<div class="no-notifications">لا توجد إشعارات</div>';
+        return;
+    }
+
+    // Group and display notifications
+    const groupedNotifications = groupNotificationsByDate(notifications);
+    notificationsContent.innerHTML = Object.entries(groupedNotifications)
+        .map(([date, items]) => `
+            <div class="notification-group">
+                <div class="notification-date">${formatDateHeader(date)}</div>
+                ${items.map(notification => createNotificationHTML(notification)).join('')}
+            </div>
+        `).join('');
+
+    // Add click listeners
+    addNotificationListeners();
+}
+
+// Create notification HTML
+function createNotificationHTML(notification) {
+    return `
+        <div class="notification-item ${notification.read ? 'read' : ''}" 
+             data-notification-id="${notification.id}">
+            <div class="notification-icon">
+                <i class="${getNotificationIcon(notification.type)}"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-header">
+                    <div class="notification-title">
+                        ${notification.title}
+                        ${!notification.read ? '<span class="unread-badge"></span>' : ''}
+                    </div>
+                    <div class="notification-time">
+                        ${formatTimestamp(notification.timestamp)}
+                    </div>
+                </div>
+                <div class="notification-message">${notification.message}</div>
+            </div>
+        </div>
+    `;
 }
 
 // Format timestamp with exact time
