@@ -784,13 +784,54 @@ document.head.appendChild(style);
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     // Register Service Worker for Push Notifications
-    registerServiceWorker();
+    registerServiceWorker().then(() => {
+        console.log('Service Worker تم تسجيله بنجاح');
+    }).catch(error => {
+        console.error('فشل تسجيل Service Worker:', error);
+    });
     
     // Initialize theme
     loadTheme();
 
     // Initialize search functionality
     initializeSearch();
+
+    // Add test notification button
+    const testNotificationBtn = document.createElement('button');
+    testNotificationBtn.textContent = 'اختبار الإشعارات';
+    testNotificationBtn.className = 'btn btn-primary';
+    testNotificationBtn.style.margin = '10px';
+    testNotificationBtn.onclick = async () => {
+        try {
+            // Check if service worker is registered
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Send test notification
+            await registration.showNotification('اختبار الإشعارات', {
+                body: 'هذا اختبار للإشعارات. إذا رأيت هذه الرسالة، فإن الإشعارات تعمل بنجاح! 🎉',
+                icon: '/icon.png',
+                badge: '/badge.png',
+                dir: 'rtl',
+                lang: 'ar',
+                requireInteraction: true,
+                actions: [
+                    {
+                        action: 'open',
+                        title: 'فتح التطبيق'
+                    },
+                    {
+                        action: 'close',
+                        title: 'إغلاق'
+                    }
+                ]
+            });
+            console.log('تم إرسال إشعار الاختبار بنجاح');
+        } catch (error) {
+            console.error('فشل إرسال إشعار الاختبار:', error);
+            alert('حدث خطأ أثناء إرسال الإشعار. تأكد من السماح بالإشعارات في إعدادات المتصفح.');
+        }
+    };
+    document.querySelector('#habitSelection').prepend(testNotificationBtn);
 
     // Initialize other features
     if (currentHabit) {
@@ -801,7 +842,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Load the specific habit's progress
         loadProgress();
         showDailyTip();
-        checkLastSuccessTime(); // Add initial check
+        checkLastSuccessTime();
     }
 
     // Initialize notifications
@@ -996,64 +1037,100 @@ function markAllAsRead() {
     updateNotificationsUI();
 }
 
-// Service Worker Registration
+// Update Service Worker registration
 async function registerServiceWorker() {
-    if ('serviceWorker' in navigator && 'Notification' in window) {
-        try {
-            const registration = await navigator.serviceWorker.register('service-worker.js');
-            initializePushNotifications(registration);
-        } catch (error) {
-            console.error('فشل تسجيل Service Worker:', error);
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+        console.log('المتصفح لا يدعم Service Worker أو الإشعارات');
+        return;
+    }
+
+    try {
+        // Check if we already have permission
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.log('لم يتم منح إذن الإشعارات');
+                return;
+            }
         }
+
+        // Register service worker
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
+        console.log('Service Worker تم تسجيله:', registration);
+
+        // Wait for the service worker to be ready
+        await navigator.serviceWorker.ready;
+        console.log('Service Worker جاهز');
+
+        // Initialize notifications
+        await initializePushNotifications(registration);
+
+        return registration;
+    } catch (error) {
+        console.error('فشل تسجيل Service Worker:', error);
+        throw error;
     }
 }
 
-// Initialize Push Notifications
+// Update Initialize Push Notifications
 async function initializePushNotifications(registration) {
     try {
-        const permission = await Notification.requestPermission();
-        
-        if (permission === 'granted') {
-            // Store the permission status
-            localStorage.setItem('notificationsEnabled', 'true');
-            
-            // Register for periodic background sync if supported
-            if ('periodicSync' in registration) {
-                try {
-                    // Request permission for background sync
-                    const status = await navigator.permissions.query({
-                        name: 'periodic-background-sync',
-                    });
-
-                    if (status.state === 'granted') {
-                        // Register periodic sync - check every 1 hour
-                        await registration.periodicSync.register('check-habit-progress', {
-                            minInterval: 60 * 60 * 1000, // 1 hour in milliseconds
-                        });
-                    }
-                } catch (error) {
-                    console.log('Periodic background sync not supported');
-                }
-            }
-
-            // Subscribe to push notifications
-            try {
-                const subscribeOptions = {
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array('YOUR_PUBLIC_VAPID_KEY')
-                };
-                
-                const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
-                console.log('تم تفعيل الإشعارات بنجاح');
-
-                // Schedule initial notifications
-                scheduleNotifications(registration);
-            } catch (error) {
-                console.error('فشل الاشتراك في الإشعارات:', error);
+        // Check if notification permission is already granted
+        if (Notification.permission === 'granted') {
+            console.log('تم منح إذن الإشعارات مسبقاً');
+        } else {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.log('لم يتم منح إذن الإشعارات');
+                return;
             }
         }
+
+        // Store the permission status
+        localStorage.setItem('notificationsEnabled', 'true');
+        
+        // Register for periodic background sync if supported
+        if ('periodicSync' in registration) {
+            try {
+                const status = await navigator.permissions.query({
+                    name: 'periodic-background-sync',
+                });
+
+                if (status.state === 'granted') {
+                    await registration.periodicSync.register('check-habit-progress', {
+                        minInterval: 60 * 60 * 1000, // 1 hour
+                    });
+                    console.log('تم تسجيل التزامن الدوري بنجاح');
+                }
+            } catch (error) {
+                console.log('التزامن الدوري في الخلفية غير مدعوم:', error);
+            }
+        }
+
+        // Schedule immediate test notification
+        setTimeout(async () => {
+            try {
+                await registration.showNotification('تم تفعيل الإشعارات', {
+                    body: 'تم تفعيل نظام الإشعارات بنجاح! ستتلقى تذكيرات يومية لتسجيل تقدمك.',
+                    icon: '/icon.png',
+                    badge: '/badge.png',
+                    dir: 'rtl',
+                    lang: 'ar',
+                    requireInteraction: true
+                });
+                console.log('تم إرسال إشعار التفعيل بنجاح');
+            } catch (error) {
+                console.error('فشل إرسال إشعار التفعيل:', error);
+            }
+        }, 2000);
+
+        // Schedule daily notifications
+        await scheduleNotifications(registration);
+        console.log('تم جدولة الإشعارات اليومية');
+
     } catch (error) {
-        console.error('حدث خطأ أثناء طلب إذن الإشعارات:', error);
+        console.error('حدث خطأ أثناء تهيئة الإشعارات:', error);
+        throw error;
     }
 }
 
