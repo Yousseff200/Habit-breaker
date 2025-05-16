@@ -1,32 +1,192 @@
 // Service Worker for Push Notifications and Background Sync
-const CACHE_NAME = 'habit-crusher-v1';
-const NOTIFICATION_EVENTS = {
-    CLICK: 'notificationclick',
-    CLOSE: 'notificationclose',
-    PUSH: 'push',
-    SYNC: 'sync',
-    MESSAGE: 'message'
-};
+const CACHE_NAME = 'habit-tracker-v1';
+const STATIC_CACHE = 'static-v1';
+const DYNAMIC_CACHE = 'dynamic-v1';
+const OFFLINE_PAGE = '/offline.html';
+
+const STATIC_ASSETS = [
+    '/',
+    '/index.html',
+    '/styles.css',
+    '/script.js',
+    '/manifest.json',
+    '/offline.html',
+    '/icons/icon-192x192.png',
+    '/icons/icon-512x512.png',
+    '/sounds/notification.mp3',
+    '/sounds/achievement.mp3',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
+];
 
 // Cache static assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll([
-                '/',
-                '/index.html',
-                '/styles.css',
-                '/script.js',
-                '/icon.png',
-                '/badge.png',
-                '/sounds/urgent.mp3',
-                '/sounds/high.mp3',
-                '/sounds/medium.mp3',
-                '/sounds/low.mp3'
-            ]);
+        Promise.all([
+            caches.open(STATIC_CACHE)
+                .then(cache => cache.addAll(STATIC_ASSETS)),
+            caches.open(CACHE_NAME)
+                .then(cache => cache.add(OFFLINE_PAGE))
+        ])
+    );
+});
+
+// Activate Event
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(keys => {
+            return Promise.all(
+                keys.map(key => {
+                    if (key !== CACHE_NAME && key !== STATIC_CACHE && key !== DYNAMIC_CACHE) {
+                        return caches.delete(key);
+                    }
+                })
+            );
         })
     );
 });
+
+// Fetch Event
+self.addEventListener('fetch', event => {
+    // Handle API requests
+    if (event.request.url.includes('/api/')) {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    const clonedResponse = response.clone();
+                    caches.open(DYNAMIC_CACHE)
+                        .then(cache => cache.put(event.request, clonedResponse));
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match(event.request);
+                })
+        );
+        return;
+    }
+
+    // Handle static assets
+    if (STATIC_ASSETS.some(asset => event.request.url.includes(asset))) {
+        event.respondWith(
+            caches.match(event.request)
+                .then(response => response || fetch(event.request))
+        );
+        return;
+    }
+
+    // Network-first strategy for other requests
+    event.respondWith(
+        fetch(event.request)
+            .then(response => {
+                const clonedResponse = response.clone();
+                caches.open(DYNAMIC_CACHE)
+                    .then(cache => cache.put(event.request, clonedResponse));
+                return response;
+            })
+            .catch(() => {
+                return caches.match(event.request)
+                    .then(response => {
+                        if (response) {
+                            return response;
+                        }
+                        if (event.request.headers.get('accept').includes('text/html')) {
+                            return caches.match(OFFLINE_PAGE);
+                        }
+                        return new Response('', {
+                            status: 408,
+                            statusText: 'Request timeout'
+                        });
+                    });
+            })
+    );
+});
+
+// Push Event
+self.addEventListener('push', event => {
+    const options = {
+        body: event.data.text(),
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/badge-72x72.png',
+        vibrate: [100, 50, 100],
+        data: {
+            dateOfArrival: Date.now(),
+            primaryKey: 1
+        },
+        actions: [
+            {
+                action: 'view',
+                title: 'عرض',
+                icon: '/icons/check.png'
+            },
+            {
+                action: 'close',
+                title: 'إغلاق',
+                icon: '/icons/close.png'
+            }
+        ]
+    };
+
+    event.waitUntil(
+        self.registration.showNotification('محطم العادات', options)
+    );
+});
+
+// Notification Click Event
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+
+    if (event.action === 'view') {
+        event.waitUntil(
+            clients.matchAll({
+                type: 'window'
+            })
+            .then(function(clientList) {
+                if (clientList.length > 0) {
+                    return clientList[0].focus();
+                }
+                return clients.openWindow('/');
+            })
+        );
+    }
+});
+
+// Background Sync
+self.addEventListener('sync', event => {
+    if (event.tag === 'sync-habits') {
+        event.waitUntil(
+            syncHabits()
+        );
+    }
+});
+
+// Helper function to sync habits data
+async function syncHabits() {
+    try {
+        const habitsData = await getHabitsFromIndexedDB();
+        if (habitsData) {
+            localStorage.setItem('habits', JSON.stringify(habitsData));
+        }
+    } catch (error) {
+        console.error('Error syncing habits:', error);
+    }
+}
+
+// Helper function to get habits from IndexedDB
+async function getHabitsFromIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('HabitsDB', 1);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const db = request.result;
+            const transaction = db.transaction(['habits'], 'readonly');
+            const store = transaction.objectStore('habits');
+            const getRequest = store.getAll();
+            
+            getRequest.onsuccess = () => resolve(getRequest.result);
+            getRequest.onerror = () => reject(getRequest.error);
+        };
+    });
+}
 
 // Enhanced Push Notification Handler
 self.addEventListener('push', function(event) {
