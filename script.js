@@ -932,7 +932,7 @@ function getMotivationalMessage(streak) {
 // Show notification
 function showNotification(title, message, options = {}) {
     const notificationContainer = document.getElementById('notificationContainer') || createNotificationContainer();
-    
+
     const notification = document.createElement('div');
     notification.className = `notification ${options.type || ''}`;
     notification.setAttribute('data-notification-id', Date.now());
@@ -1047,10 +1047,10 @@ function initializeNotifications() {
         });
     }
 
-    // Clear notifications button
+        // Clear notifications button
     if (clearNotificationsBtn) {
         clearNotificationsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+                e.stopPropagation();
             clearAllNotifications();
         });
     }
@@ -1084,13 +1084,13 @@ function addNotification(title, message, type = 'info', options = {}) {
     }
 
     // Save to localStorage
-    localStorage.setItem('notifications', JSON.stringify(notifications));
+                localStorage.setItem('notifications', JSON.stringify(notifications));
 
     // Show notification toast
     showNotification(title, message, { type, ...options });
 
     // Update notifications list UI
-    updateNotificationsUI();
+        updateNotificationsUI();
 
     return notification;
 }
@@ -1170,14 +1170,14 @@ function createNotificationHTML(notification) {
                 <div class="notification-header">
                     <div class="notification-title">
                         ${notification.title}
-                        ${!notification.read ? '<span class="unread-badge"></span>' : ''}
-                    </div>
-                    <div class="notification-time">
-                        ${formatTimestamp(notification.timestamp)}
-                    </div>
+                    ${!notification.read ? '<span class="unread-badge"></span>' : ''}
                 </div>
-                <div class="notification-message">${notification.message}</div>
+                    <div class="notification-time">
+                    ${formatTimestamp(notification.timestamp)}
+                </div>
             </div>
+                <div class="notification-message">${notification.message}</div>
+        </div>
         </div>
     `;
 }
@@ -1368,7 +1368,7 @@ function schedulePushNotification(title, message, options = {}) {
             notification.close();
         };
     }
-}
+} 
 
 // Initialize WebSocket listeners
 function initializeRealtimeNotifications() {
@@ -1477,4 +1477,100 @@ function updateStreakUI(newStreak) {
         const progress = (newStreak % 30) / 30 * 100;
         progressBar.style.width = `${progress}%`;
     }
-} 
+}
+
+// Debounce function for performance optimization
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Throttle function for performance optimization
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Optimize search functionality with debouncing
+const debouncedSearch = debounce((searchTerm) => {
+    const cards = document.querySelectorAll('.habit-card');
+    const searchLower = searchTerm.toLowerCase();
+    let hasResults = false;
+
+    cards.forEach(card => {
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        const description = card.querySelector('p').textContent.toLowerCase();
+        const isMatch = title.includes(searchLower) || description.includes(searchLower);
+        
+        card.style.display = isMatch ? 'flex' : 'none';
+        if (isMatch) hasResults = true;
+    });
+
+    noResults.style.display = hasResults ? 'none' : 'block';
+}, 250);
+
+// Optimize scroll event handling with throttling
+const throttledScroll = throttle(() => {
+    const scrollPosition = window.scrollY;
+    // Add any scroll-based animations or loading here
+}, 100);
+
+// Use Intersection Observer for lazy loading
+const observerOptions = {
+    root: null,
+    rootMargin: '50px',
+    threshold: 0.1
+};
+
+const lazyLoadObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const element = entry.target;
+            if (element.dataset.src) {
+                element.src = element.dataset.src;
+                element.removeAttribute('data-src');
+                lazyLoadObserver.unobserve(element);
+            }
+        }
+    });
+}, observerOptions);
+
+// Event Delegation for better performance
+document.addEventListener('click', (e) => {
+    // Handle habit card clicks
+    if (e.target.closest('.habit-card')) {
+        const card = e.target.closest('.habit-card');
+        const habitId = card.dataset.habit;
+        updateHabitInfo(habitId);
+    }
+
+    // Handle notification actions
+    if (e.target.closest('.notification-action')) {
+        const action = e.target.closest('.notification-action');
+        const notificationId = action.dataset.notificationId;
+        const actionId = action.dataset.actionId;
+        handleNotificationAction(notificationId, actionId);
+    }
+});
+
+// Update event listeners to use optimized functions
+habitSearch.addEventListener('input', (e) => debouncedSearch(e.target.value));
+window.addEventListener('scroll', throttledScroll);
+
+// Initialize lazy loading
+document.querySelectorAll('img[data-src]').forEach(img => lazyLoadObserver.observe(img));
+
+// ... existing code ... 
