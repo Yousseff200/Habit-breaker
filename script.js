@@ -1087,89 +1087,25 @@ function markAllAsRead() {
     updateNotificationsUI();
 }
 
-// Request necessary permissions
+// Request necessary permissions quietly in the background
 async function requestPermissions() {
     try {
-        // Request notification permission
-        const notificationPermission = await Notification.requestPermission();
-        console.log('حالة إذن الإشعارات:', notificationPermission);
+        if ('Notification' in window) {
+            const notificationPermission = await Notification.requestPermission();
+            console.log('Notification permission:', notificationPermission);
+        }
 
-        // Request storage permission
+        // Request storage permission quietly
         if ('persist' in navigator && 'storage' in navigator) {
-            // Request persistent storage
             const isPersisted = await navigator.storage.persist();
-            console.log('تم منح إذن التخزين الدائم:', isPersisted);
-
-            // Check storage quota
-            const estimate = await navigator.storage.estimate();
-            const quota = estimate.quota;
-            const usage = estimate.usage;
-            const percentageUsed = (usage / quota) * 100;
-            console.log(`مساحة التخزين المتاحة: ${Math.round(quota / 1024 / 1024)}MB`);
-            console.log(`المساحة المستخدمة: ${Math.round(percentageUsed)}%`);
-
-            // Store permissions status
+            console.log('Storage permission:', isPersisted);
             localStorage.setItem('storagePermission', isPersisted.toString());
         }
 
-        // Show permissions status to user
-        showPermissionsStatus(notificationPermission);
-
-        return notificationPermission === 'granted';
+        return Notification.permission === 'granted';
     } catch (error) {
-        console.error('حدث خطأ أثناء طلب الأذونات:', error);
+        console.error('Error requesting permissions:', error);
         return false;
-    }
-}
-
-// Show permissions status to user
-function showPermissionsStatus(notificationPermission) {
-    const permissionMessage = document.createElement('div');
-    permissionMessage.className = 'permission-status';
-    permissionMessage.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background-color: var(--card-bg);
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: var(--shadow);
-        z-index: 1000;
-        direction: rtl;
-        max-width: 300px;
-    `;
-
-    let message = '<h3>حالة الأذونات</h3>';
-    
-    // Notification status
-    message += `<p>الإشعارات: ${
-        notificationPermission === 'granted' ? '✅ مفعلة' :
-        notificationPermission === 'denied' ? '❌ مرفوضة' : '⚠️ لم يتم الطلب'
-    }</p>`;
-
-    // Storage status
-    const storagePermission = localStorage.getItem('storagePermission');
-    message += `<p>التخزين: ${
-        storagePermission === 'true' ? '✅ مفعل' : '⚠️ غير مفعل'
-    }</p>`;
-
-    // Add retry button if any permission is denied
-    if (notificationPermission === 'denied' || storagePermission !== 'true') {
-        message += `
-            <button onclick="requestPermissions()" class="btn btn-primary" style="margin-top: 10px;">
-                طلب الأذونات مجدداً
-            </button>
-        `;
-    }
-
-    permissionMessage.innerHTML = message;
-    document.body.appendChild(permissionMessage);
-
-    // Remove the message after 5 seconds if all permissions are granted
-    if (notificationPermission === 'granted' && storagePermission === 'true') {
-        setTimeout(() => {
-            permissionMessage.remove();
-        }, 5000);
     }
 }
 
