@@ -291,7 +291,7 @@ const notificationConfig = {
     soundEnabled: true
 };
 
-// Enhanced notification system with categories and priorities
+// Enhanced notification system with realtime support
 function sendEnhancedNotification(title, message, options = {}) {
     const {
         category = notificationConfig.categories.SYSTEM,
@@ -301,7 +301,8 @@ function sendEnhancedNotification(title, message, options = {}) {
         icon = getNotificationIcon(category),
         persistent = false,
         sound = true,
-        data = {}
+        data = {},
+        realtime = true // New option for realtime notifications
     } = options;
 
     // Create notification object
@@ -341,30 +342,12 @@ function sendEnhancedNotification(title, message, options = {}) {
         playNotificationSound(priority);
     }
 
-    // Send push notification if permission granted
-    if (Notification.permission === 'granted') {
-        const pushOptions = {
-            body: message,
-            icon: '/icon.png',
-            badge: '/badge.png',
-            dir: 'rtl',
-            lang: 'ar',
-            tag: `${category}-${notification.id}`,
+    // Send via WebSocket if realtime is enabled
+    if (realtime) {
+        notificationSocket.send('notification', {
+            ...notification,
             requireInteraction: persistent,
-            actions: actions.map(action => ({
-                action: action.id,
-                title: action.text
-            })),
-            data: {
-                notificationId: notification.id,
-                category,
-                priority,
-                ...data
-            }
-        };
-
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, pushOptions);
+            sound: notificationConfig.soundEnabled
         });
     }
 
@@ -504,7 +487,7 @@ function createNotificationHTML(notification) {
             <div class="notification-icon">
                 <i class="${getNotificationIcon(category)}"></i>
             </div>
-            <div class="notification-content">
+        <div class="notification-content">
                 <div class="notification-header">
                     <div class="notification-title">
                         ${title}
@@ -780,7 +763,7 @@ startTrackingButton.addEventListener('click', () => {
             e.stopPropagation();
             notifications = [];
             localStorage.setItem('notifications', JSON.stringify(notifications));
-        updateNotificationsUI();
+            updateNotificationsUI();
         });
     }
 
@@ -807,6 +790,9 @@ startTrackingButton.addEventListener('click', () => {
 
     // Setup enhanced notification system
     setupNotificationSystem();
+
+    // Initialize realtime notifications
+    initializeRealtimeNotifications();
 });
 
 // Habit Info Update
@@ -1253,7 +1239,6 @@ function initializeNotifications() {
             list.classList.toggle('show');
             if (list.classList.contains('show')) {
                 markAllAsRead();
-                updateNotificationsUI();
             }
         };
 
@@ -1484,5 +1469,114 @@ function schedulePushNotification(title, message, options = {}) {
             window.focus();
             notification.close();
         };
+    }
+}
+
+// Initialize WebSocket listeners
+function initializeRealtimeNotifications() {
+    notificationSocket.on('connection', (data) => {
+        console.log('WebSocket connection status:', data.status);
+    });
+
+    notificationSocket.on('notification', (data) => {
+        // Handle incoming realtime notification
+        const { title, message, options } = data;
+        showInAppNotification(title, message, {
+            ...options,
+            realtime: false // Prevent infinite loop
+        });
+    });
+
+    notificationSocket.on('achievement', (data) => {
+        // Handle achievement notifications
+        const { achievement, message } = data;
+        showAchievementNotification(achievement, message);
+    });
+
+    notificationSocket.on('streakUpdate', (data) => {
+        // Handle streak updates
+        const { streak, message } = data;
+        updateStreakUI(streak);
+        if (message) {
+            showInAppNotification('تحديث التقدم', message, {
+                type: 'streak',
+                realtime: false
+            });
+        }
+    });
+
+    notificationSocket.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        showInAppNotification(
+            'خطأ في الاتصال',
+            'حدث خطأ في الاتصال بالخادم. جاري إعادة المحاولة...',
+            { type: 'error', realtime: false }
+        );
+    });
+}
+
+// Show achievement notification
+function showAchievementNotification(achievement, message) {
+    const notification = {
+        title: 'إنجاز جديد! 🏆',
+        message: message || `لقد حققت إنجاز: ${achievement}`,
+        category: notificationConfig.categories.ACHIEVEMENT,
+        priority: notificationConfig.priorities.HIGH,
+        persistent: true,
+        actions: [
+            {
+                id: 'share-achievement',
+                text: 'مشاركة',
+                handler: () => shareAchievement(achievement, message)
+            }
+        ]
+    };
+
+    sendEnhancedNotification(notification.title, notification.message, notification);
+}
+
+// Share achievement
+async function shareAchievement(achievement, message) {
+    const shareText = `🎯 لقد حققت إنجازاً جديداً في تطبيق محطم العادات السيئة!\n` +
+                     `🏆 ${achievement}\n` +
+                     `${message}\n` +
+                     `#HabitCrusher #تحدي_العادات`;
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: 'إنجاز جديد في محطم العادات',
+                text: shareText
+            });
+        } else {
+            await navigator.clipboard.writeText(shareText);
+            showInAppNotification(
+                'تم النسخ',
+                'تم نسخ نص المشاركة إلى الحافظة',
+                { type: 'success', realtime: false }
+            );
+        }
+    } catch (error) {
+        console.error('Error sharing achievement:', error);
+    }
+}
+
+// Update streak UI
+function updateStreakUI(newStreak) {
+    const streakElement = document.getElementById('streakCount');
+    if (streakElement) {
+        streakElement.textContent = newStreak;
+        
+        // Animate the streak number
+        streakElement.style.animation = 'none';
+        streakElement.offsetHeight; // Trigger reflow
+        streakElement.style.animation = 'pulse 0.5s ease-out';
+    }
+
+    // Update progress bar
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        const progress = (newStreak % 30) / 30 * 100;
+        progressBar.style.width = `${progress}%`;
     }
 } 
