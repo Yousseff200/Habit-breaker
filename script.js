@@ -227,11 +227,22 @@ const shareProgressBtn = document.getElementById('shareProgress');
 const habitSearch = document.getElementById('habitSearch');
 const noResults = document.getElementById('noResults');
 
+// Notifications Management
+let notifications = [];
+const maxNotifications = 50;
+
+// DOM Elements for notifications
+const notificationsToggle = document.querySelector('.notifications-toggle');
+const notificationsList = document.querySelector('.notifications-list');
+const notificationsCount = document.querySelector('.notifications-count');
+const notificationsContent = document.querySelector('.notifications-content');
+const clearNotificationsBtn = document.querySelector('.clear-notifications');
+
 // State Management
 let currentHabit = null;
 let streak = 0;
 let lastSuccessDate = null;
-let bestStreak = 0; // Add best streak tracking
+let bestStreak = 0;
 
 // Theme Management
 function setTheme(isDark) {
@@ -303,15 +314,21 @@ startButton.addEventListener('click', () => {
 habitCards.forEach(card => {
     card.addEventListener('click', () => {
         const habitId = card.dataset.habit;
+        // Reset state variables before switching habits
+        streak = 0;
+        lastSuccessDate = null;
+        bestStreak = 0;
         currentHabit = habitId;
         updateHabitInfo(habitId);
         showDailyTip();
+        // Load the specific habit's progress after resetting state
+        loadProgress();
         showSection('habitInfo');
     });
 });
 
 startTrackingButton.addEventListener('click', () => {
-    loadProgress();
+    // No need to call loadProgress here since it's already loaded when selecting the habit
     showSection('progressTracking');
     updateProgress();
 });
@@ -333,9 +350,10 @@ function loadProgress() {
     if (savedData) {
         const data = JSON.parse(savedData);
         streak = data.streak;
-        bestStreak = data.bestStreak || streak; // Load best streak
+        bestStreak = data.bestStreak || streak;
         lastSuccessDate = new Date(data.lastSuccessDate);
         checkStreak();
+        checkLastSuccessTime();
     }
 }
 
@@ -411,28 +429,21 @@ function updateProgress() {
     document.getElementById('streakCount').textContent = streak;
     const progress = (streak % 30) / 30 * 100;
     document.getElementById('progressBar').style.width = `${progress}%`;
-
+    
+    // Show start message if streak is 0
+    if (streak === 0) {
+        const startMessage = 'ابدأ اليوم! كل رحلة تبدأ بخطوة واحدة 🌱';
+        showMotivationMessage(startMessage);
+    }
+    
     // Show special message for completing a month
     if (streak > 0 && streak % 30 === 0) {
         const monthCount = Math.floor(streak / 30);
         const monthText = monthCount === 1 ? 'شهر' : 'شهور';
         
-        const specialMessages = [
-            `أتممت ${monthCount} ${monthText} من التغيير الإيجابي. كل يوم جديد هو فرصة للنمو 🌱`,
-            `${monthCount} ${monthText} من الخطوات الصغيرة تصنع تغييراً كبيراً. استمر في طريقك ⭐️`,
-            `مع كل يوم يمر، تصبح أقوى. ${monthCount} ${monthText} من الجهد يستحق الاحتفال 💫`,
-            `${monthCount} ${monthText} من الالتزام يظهر قوة إرادتك. أنت تصنع مستقبلك الأفضل ✨`,
-            `خطوة بخطوة، يوم بيوم. ${monthCount} ${monthText} من التقدم المستمر 🌟`
-        ];
-        
-        const randomMessage = specialMessages[Math.floor(Math.random() * specialMessages.length)];
-        showMotivationMessage(randomMessage);
-        
-        // Show special notification
-        showNotification(
-            'أحسنت! ✨',
-            `${monthCount} ${monthText} من التقدم المستمر. كل يوم هو خطوة نحو الأفضل`
-        );
+        const message = `أتممت ${monthCount} ${monthText} من التغيير الإيجابي! 🎉`;
+        showMotivationMessage(message);
+        addNotification('إنجاز جديد! 🏆', message, 'achievement');
     }
 }
 
@@ -480,29 +491,73 @@ shareProgressBtn.addEventListener('click', async () => {
 });
 
 // Notification System
-function showNotification(title, message) {
+function showNotification(title, message, options = {}) {
     const notification = document.createElement('div');
     notification.className = 'notification';
+    
+    if (options.type) {
+        notification.classList.add(`notification-${options.type}`);
+    }
+    
+    let actionsHtml = '';
+    if (options.actions) {
+        actionsHtml = `
+            <div class="notification-actions">
+                ${options.actions.map(action => `
+                    <button class="notification-action" data-action="${action.id}">
+                        ${action.text}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    }
+    
     notification.innerHTML = `
-        <i class="fas fa-bell"></i>
-        <div>
-            <strong>${title}</strong>
-            <p>${message}</p>
+        <div class="notification-content">
+            <i class="${options.icon || 'fas fa-bell'}"></i>
+            <div class="notification-text">
+                <strong>${title}</strong>
+                <p>${message}</p>
+            </div>
+            ${actionsHtml}
         </div>
     `;
     
-    document.getElementById('notificationContainer').appendChild(notification);
+    const container = document.getElementById('notificationContainer');
+    container.appendChild(notification);
     
-    setTimeout(() => {
-        notification.remove();
-    }, 5000);
+    // Add notification to the list
+    addNotification(title, message, options.type || 'info');
+    
+    if (options.actions) {
+        options.actions.forEach(action => {
+            const button = notification.querySelector(`[data-action="${action.id}"]`);
+            if (button && action.handler) {
+                button.addEventListener('click', () => {
+                    action.handler();
+                    if (action.closeOnClick) {
+                        notification.remove();
+                    }
+                });
+            }
+        });
+    }
+    
+    if (!options.persistent) {
+        setTimeout(() => {
+            notification.classList.add('notification-exit');
+            setTimeout(() => notification.remove(), 300);
+        }, options.duration || 5000);
+    }
+    
+    return notification;
 }
 
 // Success Button Handler
 successButton.addEventListener('click', () => {
     const today = new Date();
     
-    if (lastSuccessDate) {
+    if (lastSuccessDate && streak > 0) {
         const lastDate = new Date(lastSuccessDate);
         if (today.toDateString() === lastDate.toDateString()) {
             showMotivationMessage('لقد سجلت نجاحك لهذا اليوم بالفعل. عد غداً!');
@@ -515,19 +570,222 @@ successButton.addEventListener('click', () => {
     saveProgress();
     updateProgress();
     
-    const messages = [
-        'أحسنت! أنت تقترب من هدفك كل يوم!',
-        'رائع! استمر في التقدم!',
-        'كل يوم نجاح هو خطوة نحو حياة أفضل!',
-        'أنت تصنع التغيير! واصل التقدم!',
-        'نفتخر بك! أنت قدوة للآخرين!'
-    ];
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    showMotivationMessage(randomMessage);
+    let message;
+    if (streak === 1) {
+        message = 'أحسنت! لقد بدأت رحلة التغيير. كل رحلة تبدأ بخطوة واحدة! 🌱';
+    } else {
+        const messages = [
+            'أحسنت! أنت تقترب من هدفك كل يوم! 🎯',
+            'رائع! استمر في التقدم! ⭐️',
+            'كل يوم نجاح هو خطوة نحو حياة أفضل! 🌟',
+            'أنت تصنع التغيير! واصل التقدم! 💪',
+            'نفتخر بك! أنت قدوة للآخرين! ✨'
+        ];
+        message = messages[Math.floor(Math.random() * messages.length)];
+    }
+    
+    showMotivationMessage(message);
+    addNotification('تم تسجيل النجاح! 🎉', message, 'success');
 });
+
+// Check Last Success Time and Show Notification
+function checkLastSuccessTime() {
+    if (!lastSuccessDate) return;
+    
+    const now = new Date();
+    const lastDate = new Date(lastSuccessDate);
+    const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays >= 1) {
+        const habit = habitsData[currentHabit];
+        
+        // Get time of day for personalized message
+        const hour = now.getHours();
+        let timeBasedGreeting = '';
+        if (hour >= 5 && hour < 12) {
+            timeBasedGreeting = 'صباح الخير! ';
+        } else if (hour >= 12 && hour < 17) {
+            timeBasedGreeting = 'مساء الخير! ';
+        } else if (hour >= 17 && hour < 22) {
+            timeBasedGreeting = 'مساء سعيد! ';
+        } else {
+            timeBasedGreeting = 'تصبح على خير! ';
+        }
+
+        // Different messages based on number of missed days
+        let motivationalMessage = '';
+        let title = '';
+        let icon = '';
+
+        if (diffDays === 1) {
+            title = 'لم تسجل التزامك بالأمس 💭';
+            motivationalMessage = `لا تدع يوماً واحداً يوقف تقدمك! عد إلى المسار الصحيح اليوم.`;
+            icon = 'fas fa-history';
+        } else if (diffDays === 2) {
+            title = 'يومان بدون تسجيل 🤔';
+            motivationalMessage = `تذكر لماذا بدأت! قوتك في عودتك. سجل التزامك اليوم وواصل التقدم.`;
+            icon = 'fas fa-route';
+        } else if (diffDays <= 4) {
+            title = 'نفتقد وجودك! 💫';
+            motivationalMessage = `${diffDays} أيام مرت. لا تترك العادة القديمة تسيطر عليك. أنت أقوى من ذلك!`;
+            icon = 'fas fa-star';
+        } else if (diffDays <= 7) {
+            title = 'لا تستسلم! 💪';
+            motivationalMessage = `أسبوع تقريباً مر. تذكر كل تقدم حققته. يمكنك العودة أقوى!`;
+            icon = 'fas fa-fist-raised';
+        } else {
+            title = 'نحن نؤمن بك! ✨';
+            motivationalMessage = `مر ${diffDays} يوم، لكن لا يزال الوقت مناسباً للعودة. كل يوم هو فرصة جديدة!`;
+            icon = 'fas fa-sun';
+        }
+
+        // Add daily tip to the message
+        const tips = dailyTips[currentHabit];
+        const randomTip = tips[Math.floor(Math.random() * tips.length)];
+        
+        // Show in-app notification
+        showNotification(
+            `${timeBasedGreeting}${title}`,
+            `${motivationalMessage}\n\nنصيحة اليوم: ${randomTip}`,
+            {
+                type: 'reminder',
+                icon: icon,
+                duration: 10000,
+                persistent: true,
+                actions: [
+                    {
+                        id: 'record-success',
+                        text: 'تسجيل النجاح',
+                        handler: () => {
+                            successButton.click();
+                        },
+                        closeOnClick: true
+                    },
+                    {
+                        id: 'remind-later',
+                        text: 'تذكيري بعد ساعة',
+                        handler: () => {
+                            setTimeout(checkLastSuccessTime, 1000 * 60 * 60);
+                        },
+                        closeOnClick: true
+                    }
+                ]
+            }
+        );
+
+        // Send Push Notification if enabled
+        if (Notification.permission === 'granted') {
+            schedulePushNotification(
+                `${timeBasedGreeting}${title}`,
+                `${motivationalMessage}\n\nنصيحة اليوم: ${randomTip}`,
+                {
+                    tag: 'habit-reminder', // Prevents duplicate notifications
+                    renotify: true, // Allows the same notification to notify again
+                    requireInteraction: true, // Notification stays until user interacts
+                    actions: [
+                        {
+                            action: 'open',
+                            title: 'فتح التطبيق'
+                        }
+                    ]
+                }
+            );
+        }
+
+        // Schedule next reminder for tomorrow
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM tomorrow
+        const timeUntilTomorrow = tomorrow - now;
+        
+        setTimeout(checkLastSuccessTime, timeUntilTomorrow);
+    }
+}
+
+// Add CSS styles for enhanced notifications
+const style = document.createElement('style');
+style.textContent = `
+    .notification {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: var(--shadow);
+        animation: slideIn 0.3s ease forwards;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .notification-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .notification-text {
+        flex: 1;
+    }
+
+    .notification-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .notification-action {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .notification-action:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .notification-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background-color: var(--primary-color);
+        width: 100%;
+        transform-origin: left;
+    }
+
+    @keyframes progress {
+        from { transform: scaleX(1); }
+        to { transform: scaleX(0); }
+    }
+
+    .notification-exit {
+        animation: slideOut 0.3s ease forwards;
+    }
+
+    @keyframes slideOut {
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+
+    .notification-reminder {
+        border-right: 4px solid var(--primary-color);
+    }
+`;
+document.head.appendChild(style);
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    // Register Service Worker for Push Notifications
+    registerServiceWorker();
+    
     // Initialize theme
     loadTheme();
 
@@ -536,9 +794,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize other features
     if (currentHabit) {
+        // Reset state variables
+        streak = 0;
+        lastSuccessDate = null;
+        bestStreak = 0;
+        // Load the specific habit's progress
         loadProgress();
         showDailyTip();
+        checkLastSuccessTime(); // Add initial check
     }
+
+    // Initialize notifications
+    initializeNotifications();
 });
 
 function initializeSearch() {
@@ -624,4 +891,176 @@ document.querySelectorAll('.back-btn').forEach(button => {
             }
         });
     });
-}); 
+});
+
+// Notifications Management
+function initializeNotifications() {
+    const savedNotifications = localStorage.getItem('notifications');
+    if (savedNotifications) {
+        notifications = JSON.parse(savedNotifications);
+        updateNotificationsUI();
+    }
+}
+
+// Add notification to the list
+function addNotification(title, message, type = 'info') {
+    const notification = {
+        id: Date.now(),
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+    
+    notifications.unshift(notification);
+    
+    // Keep only the latest maxNotifications
+    if (notifications.length > maxNotifications) {
+        notifications = notifications.slice(0, maxNotifications);
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    
+    // Update UI
+    updateNotificationsUI();
+    
+    return notification;
+}
+
+// Update notifications UI
+function updateNotificationsUI() {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationsCount.textContent = unreadCount;
+    notificationsCount.classList.toggle('show', unreadCount > 0);
+    
+    if (notifications.length === 0) {
+        notificationsContent.innerHTML = '<div class="no-notifications">لا توجد إشعارات</div>';
+        return;
+    }
+    
+    notificationsContent.innerHTML = notifications.map(notification => `
+        <div class="notification-item ${notification.read ? 'read' : ''}" data-id="${notification.id}">
+            <div class="notification-title">${notification.title}</div>
+            <div class="notification-message">${notification.message}</div>
+            <div class="time">${formatTimestamp(notification.timestamp)}</div>
+        </div>
+    `).join('');
+}
+
+// Format timestamp to relative time
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) { // Less than 1 minute
+        return 'الآن';
+    } else if (diff < 3600000) { // Less than 1 hour
+        const minutes = Math.floor(diff / 60000);
+        return `منذ ${minutes} دقيقة`;
+    } else if (diff < 86400000) { // Less than 1 day
+        const hours = Math.floor(diff / 3600000);
+        return `منذ ${hours} ساعة`;
+    } else {
+        const days = Math.floor(diff / 86400000);
+        return `منذ ${days} يوم`;
+    }
+}
+
+// Event Listeners for notifications
+notificationsToggle.addEventListener('click', () => {
+    notificationsList.classList.toggle('show');
+    if (notificationsList.classList.contains('show')) {
+        markAllAsRead();
+    }
+});
+
+clearNotificationsBtn.addEventListener('click', () => {
+    notifications = [];
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    updateNotificationsUI();
+});
+
+document.addEventListener('click', (e) => {
+    if (!notificationsList.contains(e.target) && !notificationsToggle.contains(e.target)) {
+        notificationsList.classList.remove('show');
+    }
+});
+
+// Mark all notifications as read
+function markAllAsRead() {
+    notifications = notifications.map(n => ({ ...n, read: true }));
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    updateNotificationsUI();
+}
+
+// Service Worker Registration
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator && 'Notification' in window) {
+        try {
+            const registration = await navigator.serviceWorker.register('service-worker.js');
+            initializePushNotifications(registration);
+        } catch (error) {
+            console.error('فشل تسجيل Service Worker:', error);
+        }
+    }
+}
+
+// Initialize Push Notifications
+async function initializePushNotifications(registration) {
+    const permission = await Notification.requestPermission();
+    
+    if (permission === 'granted') {
+        // Store the permission status
+        localStorage.setItem('notificationsEnabled', 'true');
+        
+        // Subscribe to push notifications
+        try {
+            const subscribeOptions = {
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array('YOUR_PUBLIC_VAPID_KEY') // You'll need to replace this with your VAPID key
+            };
+            
+            const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
+            // Here you would typically send the pushSubscription to your server
+            console.log('تم تفعيل الإشعارات بنجاح');
+        } catch (error) {
+            console.error('فشل الاشتراك في الإشعارات:', error);
+        }
+    }
+}
+
+// Helper function to convert VAPID key
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+// Schedule Push Notification
+function schedulePushNotification(title, message, options = {}) {
+    if (Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+            body: message,
+            icon: '/icon.png', // Add your app icon path
+            badge: '/badge.png', // Add your badge icon path
+            ...options
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+    }
+} 
