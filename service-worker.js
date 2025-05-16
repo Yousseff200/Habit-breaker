@@ -4,7 +4,8 @@ const NOTIFICATION_EVENTS = {
     CLICK: 'notificationclick',
     CLOSE: 'notificationclose',
     PUSH: 'push',
-    SYNC: 'sync'
+    SYNC: 'sync',
+    MESSAGE: 'message'
 };
 
 // Cache static assets
@@ -151,56 +152,88 @@ self.addEventListener('notificationclose', function(event) {
     }
 });
 
-// Background Sync for Offline Support
+// Handle messages from the client
+self.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'PUSH_NOTIFICATION') {
+        const notificationData = event.data.data;
+        
+        const options = {
+            body: notificationData.message || 'حان وقت تسجيل تقدمك اليومي!',
+            icon: '/icon.png',
+            badge: '/badge.png',
+            dir: 'rtl',
+            lang: 'ar',
+            vibrate: [100, 50, 100],
+            data: {
+                dateOfArrival: Date.now(),
+                primaryKey: notificationData.id || Date.now(),
+                category: notificationData.category || 'realtime',
+                priority: notificationData.priority || 2,
+                ...notificationData.data
+            },
+            actions: notificationData.actions || [
+                {
+                    action: 'open',
+                    title: 'فتح التطبيق'
+                },
+                {
+                    action: 'close',
+                    title: 'إغلاق'
+                }
+            ],
+            requireInteraction: notificationData.requireInteraction || true,
+            silent: false,
+            tag: `realtime-${Date.now()}`,
+            renotify: true,
+            timestamp: Date.now()
+        };
+
+        // Play different sounds based on priority
+        if (notificationData.priority >= 3) {
+            options.sound = '/sounds/urgent.mp3';
+        } else if (notificationData.priority === 2) {
+            options.sound = '/sounds/high.mp3';
+        }
+
+        self.registration.showNotification(notificationData.title || 'إشعار جديد', options);
+    }
+});
+
+// Enhanced background sync for realtime notifications
 self.addEventListener('sync', function(event) {
     if (event.tag === 'sync-notifications') {
         event.waitUntil(
-            // Sync pending notifications
             syncPendingNotifications()
+        );
+    } else if (event.tag === 'realtime-sync') {
+        event.waitUntil(
+            syncRealtimeNotifications()
         );
     }
 });
 
-// Function to sync pending notifications
-async function syncPendingNotifications() {
+// Function to sync realtime notifications
+async function syncRealtimeNotifications() {
     try {
-        const pendingNotifications = await getPendingNotifications();
-        for (const notification of pendingNotifications) {
+        const pendingRealtimeNotifications = await getPendingRealtimeNotifications();
+        for (const notification of pendingRealtimeNotifications) {
             await sendNotification(notification);
+            await markNotificationAsSynced(notification.id);
         }
-        await clearPendingNotifications();
     } catch (error) {
-        console.error('Error syncing notifications:', error);
+        console.error('Error syncing realtime notifications:', error);
     }
 }
 
-// Helper function to get pending notifications from IndexedDB
-async function getPendingNotifications() {
-    // Implementation for getting pending notifications from IndexedDB
-    // This is a placeholder - actual implementation would depend on your IndexedDB structure
+// Helper function to get pending realtime notifications
+async function getPendingRealtimeNotifications() {
+    // Implementation would use IndexedDB to store and retrieve pending realtime notifications
     return [];
 }
 
-// Helper function to send a notification
-async function sendNotification(notification) {
-    const options = {
-        body: notification.message,
-        icon: '/icon.png',
-        badge: '/badge.png',
-        dir: 'rtl',
-        lang: 'ar',
-        data: notification.data,
-        requireInteraction: notification.priority >= 2,
-        actions: notification.actions
-    };
-
-    await self.registration.showNotification(notification.title, options);
-}
-
-// Helper function to clear pending notifications
-async function clearPendingNotifications() {
-    // Implementation for clearing pending notifications from IndexedDB
-    // This is a placeholder - actual implementation would depend on your IndexedDB structure
+// Helper function to mark notification as synced
+async function markNotificationAsSynced(notificationId) {
+    // Implementation would use IndexedDB to mark notifications as synced
 }
 
 // Cache management
