@@ -308,18 +308,26 @@ function showSection(sectionId) {
 
 // Initialize the application when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize theme
-    loadTheme();
-    
-    // Initialize navigation
-    const navLinks = document.querySelectorAll('.nav-link');
+    // Initialize DOM Elements
     const sections = document.querySelectorAll('.section');
     const startButton = document.getElementById('startButton');
     const habitCards = document.querySelectorAll('.habit-card');
     const startTrackingButton = document.getElementById('startTracking');
-    const themeToggle = document.getElementById('themeToggle');
     const successButton = document.getElementById('successButton');
+    const themeToggle = document.getElementById('themeToggle');
+    const shareProgressBtn = document.getElementById('shareProgress');
+    const habitSearch = document.getElementById('habitSearch');
+    const noResults = document.getElementById('noResults');
+    const navLinks = document.querySelectorAll('.nav-link');
     const backButtons = document.querySelectorAll('.back-btn');
+    const notificationsToggle = document.querySelector('.notifications-toggle');
+    const notificationsList = document.querySelector('.notifications-list');
+    const notificationsCount = document.querySelector('.notifications-count');
+    const notificationsContent = document.querySelector('.notifications-content');
+    const clearNotificationsBtn = document.querySelector('.clear-notifications');
+
+    // Initialize theme
+    loadTheme();
 
     // Theme Toggle
     themeToggle.addEventListener('click', () => {
@@ -385,24 +393,113 @@ document.addEventListener('DOMContentLoaded', function() {
     // Success button
     if (successButton) {
         successButton.addEventListener('click', () => {
+            const today = new Date();
+            
+            if (lastSuccessDate && streak > 0) {
+                const lastDate = new Date(lastSuccessDate);
+                if (today.toDateString() === lastDate.toDateString()) {
+                    showMotivationMessage('لقد سجلت نجاحك لهذا اليوم بالفعل. عد غداً!');
+                    return;
+                }
+            }
+            
             streak++;
+            lastSuccessDate = today;
             saveProgress();
             updateProgress();
             showDailyTip();
             
-            // Show success notification
-            showNotification('أحسنت! 🎉', 'لقد أكملت يوماً آخر بنجاح!', {
-                type: 'success',
-                duration: 3000
-            });
+            let message;
+            if (streak === 1) {
+                message = 'أحسنت! لقد بدأت رحلة التغيير. كل رحلة تبدأ بخطوة واحدة! 🌱';
+            } else {
+                const messages = [
+                    'أحسنت! أنت تقترب من هدفك كل يوم! 🎯',
+                    'رائع! استمر في التقدم! ⭐️',
+                    'كل يوم نجاح هو خطوة نحو حياة أفضل! 🌟',
+                    'أنت تصنع التغيير! واصل التقدم! 💪',
+                    'نفتخر بك! أنت قدوة للآخرين! ✨'
+                ];
+                message = messages[Math.floor(Math.random() * messages.length)];
+            }
+            
+            showMotivationMessage(message);
+            addNotification('تم تسجيل النجاح! 🎉', message, 'success');
         });
     }
+
+    // Share Progress
+    if (shareProgressBtn) {
+        shareProgressBtn.addEventListener('click', async () => {
+            const habit = habitsData[currentHabit];
+            const shareText = `🎯 لقد نجحت في التغلب على ${habit.title} لمدة ${streak} يوم متتالي!\n` +
+                            `💪 أنا فخور بتقدمي في رحلة التغيير\n` +
+                            `#HabitCrusher #تحدي_العادات`;
+
+            try {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: 'Habit Crusher Progress',
+                        text: shareText
+                    });
+                } else {
+                    await navigator.clipboard.writeText(shareText);
+                    showNotification('تم النسخ', 'تم نسخ النص للمشاركة!');
+                }
+            } catch (error) {
+                const textarea = document.createElement('textarea');
+                textarea.value = shareText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('تم النسخ', 'تم نسخ النص للمشاركة!');
+                } catch (err) {
+                    showNotification('خطأ', 'لم نتمكن من نسخ النص');
+                }
+                document.body.removeChild(textarea);
+            }
+        });
+    }
+
+    // Notifications Toggle
+    notificationsToggle.addEventListener('click', () => {
+        notificationsList.classList.toggle('show');
+        if (notificationsList.classList.contains('show')) {
+            markAllAsRead();
+        }
+    });
+
+    // Clear Notifications
+    clearNotificationsBtn.addEventListener('click', () => {
+        notifications = [];
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        updateNotificationsUI();
+    });
+
+    // Close notifications on outside click
+    document.addEventListener('click', (e) => {
+        if (!notificationsList.contains(e.target) && !notificationsToggle.contains(e.target)) {
+            notificationsList.classList.remove('show');
+        }
+    });
 
     // Initialize search functionality
     initializeSearch();
     
     // Initialize notifications
     initializeNotifications();
+    
+    // Register service worker
+    registerServiceWorker();
+    
+    // Request permissions
+    requestPermissions();
+    
+    // Check last success time
+    if (currentHabit) {
+        checkLastSuccessTime();
+    }
 });
 
 // Habit Info Update
@@ -526,41 +623,6 @@ function showMotivationMessage(message) {
     motivationElement.offsetHeight; // Trigger reflow
     motivationElement.style.animation = 'fadeIn 0.5s ease forwards';
 }
-
-// Share Progress
-shareProgressBtn.addEventListener('click', async () => {
-    const habit = habitsData[currentHabit];
-    const shareText = `🎯 لقد نجحت في التغلب على ${habit.title} لمدة ${streak} يوم متتالي!\n` +
-                     `💪 أنا فخور بتقدمي في رحلة التغيير\n` +
-                     `#HabitCrusher #تحدي_العادات`;
-
-    try {
-        // Try using the Web Share API first
-        if (navigator.share) {
-            await navigator.share({
-                title: 'Habit Crusher Progress',
-                text: shareText
-            });
-        } else {
-            // Fallback to clipboard
-            await navigator.clipboard.writeText(shareText);
-            showNotification('تم النسخ', 'تم نسخ النص للمشاركة!');
-        }
-    } catch (error) {
-        // If clipboard API fails, use execCommand as last resort
-        const textarea = document.createElement('textarea');
-        textarea.value = shareText;
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-            document.execCommand('copy');
-            showNotification('تم النسخ', 'تم نسخ النص للمشاركة!');
-        } catch (err) {
-            showNotification('خطأ', 'لم نتمكن من نسخ النص');
-        }
-        document.body.removeChild(textarea);
-    }
-});
 
 // Notification System
 function showNotification(title, message, options = {}) {
