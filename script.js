@@ -1093,17 +1093,27 @@ function initializeNotifications() {
     }
 }
 
-// Update notifications UI
+// Update notifications UI with enhanced display
 function updateNotificationsUI() {
     const notificationsCount = document.querySelector('.notifications-count');
     const notificationsContent = document.querySelector('.notifications-content');
+    const notificationsToggle = document.querySelector('.notifications-toggle');
     
     if (!notificationsCount || !notificationsContent) return;
 
-    // Update count
+    // Update count of unread notifications
     const unreadCount = notifications.filter(n => !n.read).length;
     notificationsCount.textContent = unreadCount;
-    notificationsCount.style.display = unreadCount > 0 ? 'flex' : 'none';
+    
+    // Show/hide count badge
+    if (unreadCount > 0) {
+        notificationsCount.style.display = 'flex';
+        // Add pulse animation to notification icon
+        notificationsToggle.classList.add('has-notifications');
+    } else {
+        notificationsCount.style.display = 'none';
+        notificationsToggle.classList.remove('has-notifications');
+    }
 
     // Update content
     if (notifications.length === 0) {
@@ -1117,9 +1127,14 @@ function updateNotificationsUI() {
                 <i class="${getNotificationIcon(notification.type)}"></i>
             </div>
             <div class="notification-content">
-                <div class="notification-title">${notification.title}</div>
+                <div class="notification-header">
+                    <div class="notification-title">${notification.title}</div>
+                    ${!notification.read ? '<span class="unread-badge"></span>' : ''}
+                </div>
                 <div class="notification-message">${notification.message}</div>
-                <div class="notification-time">${formatTimestamp(notification.timestamp)}</div>
+                <div class="notification-time" title="${new Date(notification.timestamp).toLocaleString('ar-EG')}">
+                    ${formatTimestamp(notification.timestamp)}
+                </div>
             </div>
         </div>
     `).join('');
@@ -1134,7 +1149,7 @@ function updateNotificationsUI() {
     });
 }
 
-// Add notification
+// Add notification with enhanced timestamp
 function addNotification(title, message, type = 'info') {
     const notification = {
         id: Date.now(),
@@ -1145,6 +1160,7 @@ function addNotification(title, message, type = 'info') {
         read: false
     };
 
+    // Add to beginning of array
     notifications.unshift(notification);
 
     // Keep only the latest maxNotifications
@@ -1158,10 +1174,17 @@ function addNotification(title, message, type = 'info') {
     // Update UI
     updateNotificationsUI();
 
+    // Show notification badge animation
+    const toggle = document.querySelector('.notifications-toggle');
+    if (toggle) {
+        toggle.classList.add('notification-pulse');
+        setTimeout(() => toggle.classList.remove('notification-pulse'), 1000);
+    }
+
     return notification;
 }
 
-// Mark single notification as read
+// Mark notification as read
 function markNotificationAsRead(id) {
     notifications = notifications.map(n => {
         if (n.id === id) {
@@ -1169,6 +1192,7 @@ function markNotificationAsRead(id) {
         }
         return n;
     });
+    
     localStorage.setItem('notifications', JSON.stringify(notifications));
     updateNotificationsUI();
 }
@@ -1180,24 +1204,45 @@ function markAllAsRead() {
     updateNotificationsUI();
 }
 
-// Format timestamp
+// Format timestamp with exact time
 function formatTimestamp(timestamp) {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
+    const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' });
     
-    if (diff < 60000) { // Less than 1 minute
+    // Less than 1 minute
+    if (diff < 60000) {
         return 'الآن';
-    } else if (diff < 3600000) { // Less than 1 hour
-        const minutes = Math.floor(diff / 60000);
-        return `منذ ${minutes} دقيقة`;
-    } else if (diff < 86400000) { // Less than 1 day
-        const hours = Math.floor(diff / 3600000);
-        return `منذ ${hours} ساعة`;
-    } else {
-        const days = Math.floor(diff / 86400000);
-        return `منذ ${days} يوم`;
     }
+    
+    // Less than 1 hour
+    if (diff < 3600000) {
+        const minutes = Math.floor(diff / 60000);
+        return rtf.format(-minutes, 'minute');
+    }
+    
+    // Less than 24 hours
+    if (diff < 86400000) {
+        const hours = Math.floor(diff / 3600000);
+        return rtf.format(-hours, 'hour');
+    }
+    
+    // Less than 7 days
+    if (diff < 604800000) {
+        const days = Math.floor(diff / 86400000);
+        return rtf.format(-days, 'day');
+    }
+    
+    // Format exact date and time
+    const options = { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit'
+    };
+    return date.toLocaleString('ar-EG', options);
 }
 
 // Request necessary permissions quietly in the background
